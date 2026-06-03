@@ -1,0 +1,74 @@
+# CWS Pulse Awards — Docker Compose
+#
+# Per DTO standard (04_DOCKER_COMPOSE_STANDARD.md):
+# - Backend runs via systemd on the VM host — NOT here
+# - Frontend is static files served by NGINX on the VM host — NOT here
+# - NGINX is a system install (apt) — NOT here
+#
+# This file manages:
+#   1. PostgreSQL 16 (primary database)
+#   2. Playwright PDF sidecar (approved utility service — documented below)
+#
+# Deploy path on VM: /opt/pulse-awards/docker-compose.yml
+#
+# Playwright sidecar — approval note:
+#   Purpose: On-demand PDF generation for Golden Ticket letters via headless Chromium
+#   Port: 127.0.0.1:8001 (localhost only — not publicly reachable)
+#   Persistence: none — stateless, no volumes, no backup requirements
+#   This is an approved utility service per SOP 04 Section 4
+
+services:
+
+  # ── POSTGRESQL 16 ──────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: pulse_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pulse_awards
+      POSTGRES_USER: pulse
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      # Host port 5433 — DTO standard, avoids clash with local PostgreSQL on 5432
+      # Backend connects via: postgresql+asyncpg://pulse:<password>@127.0.0.1:5433/pulse_awards
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pulse_db_data:/var/lib/postgresql/data
+    networks:
+      - pulse_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulse -d pulse_awards"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── PLAYWRIGHT PDF SIDECAR ────────────────────────────────────────────────
+  playwright:
+    build:
+      context: ./pdf_service
+      dockerfile: Dockerfile
+    container_name: pulse_playwright
+    restart: unless-stopped
+    ports:
+      # Bound to localhost only — backend calls http://127.0.0.1:8001
+      # Not reachable from outside the VM
+      - "127.0.0.1:8001:8001"
+    networks:
+      - pulse_internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ── VOLUMES ───────────────────────────────────────────────────────────────────
+volumes:
+  pulse_db_data:
+    driver: local
+    # Data survives container restarts and recreations
+    # Backup: pg_dump scheduled via cron — see EXIT.md for procedure
+
+# ── NETWORKS ──────────────────────────────────────────────────────────────────
+networks:
+  pulse_internal:
+    driver: bridge

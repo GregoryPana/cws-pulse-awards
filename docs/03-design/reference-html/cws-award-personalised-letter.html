@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWS Pulse Awards — Personalised Award Letter</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #0f1923; padding: 20px 12px 60px; }
+
+  /* ── EDITOR SHELL ── */
+  .editor-bar {
+    max-width: 720px; margin: 0 auto 16px;
+    background: rgba(0,112,192,.1); border: 1px dashed rgba(0,112,192,.3);
+    border-radius: 8px; padding: 10px 18px; color: #60a0c8;
+    font-size: 13px; text-align: center; line-height: 1.55;
+  }
+  .editor-bar strong { color: #90c8f0; }
+  .action-bar {
+    max-width: 720px; margin: 16px auto 0;
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  }
+  .abtn { font-family: Arial, sans-serif; font-weight: 700; font-size: 13px; padding: 10px 22px; border-radius: 7px; border: none; cursor: pointer; transition: all .15s; letter-spacing: .3px; }
+  .abtn-blue   { background: #0070C0; color: white; }
+  .abtn-blue:hover { background: #005fa0; }
+  .abtn-gold   { background: #F5A623; color: #0A2240; box-shadow: 0 4px 12px rgba(245,166,35,.3); }
+  .abtn-gold:hover { filter: brightness(1.08); }
+  .abtn-ghost  { background: rgba(255,255,255,.06); color: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.1); }
+  .abtn-ghost:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
+
+  /* ── SELECTOR STRIP (above letter) ── */
+  .selector-strip {
+    max-width: 720px; margin: 0 auto 14px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px; padding: 12px 20px;
+    display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;
+  }
+  .ss-field { display: flex; flex-direction: column; gap: 4px; }
+  .ss-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.4); }
+  .ss-sel, .ss-inp {
+    font-family: Arial, sans-serif; font-size: 13px; color: white;
+    background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.15);
+    border-radius: 6px; padding: 7px 12px; outline: none; cursor: pointer;
+    transition: border-color .15s;
+  }
+  .ss-sel:focus, .ss-inp:focus { border-color: #0070C0; background: rgba(0,112,192,.15); }
+  .ss-sel option { background: #0A2240; }
+
+  /* ── LETTER CARD ── */
+  #letterCard {
+    max-width: 720px; margin: 0 auto;
+    background: #ffffff; border-radius: 3px;
+    overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.6);
+    font-family: Arial, sans-serif;
+  }
+
+  /* Top decorative bar */
+  .letter-topbar { height: 8px; background: linear-gradient(90deg, #0A2240 0%, #0070C0 50%, #00A3D9 100%); }
+
+  /* Letterhead */
+  .letterhead {
+    background: #0A2240; padding: 24px 48px 20px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+  }
+  .lh-brand { }
+  .lh-logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .lh-globe {
+    width: 42px; height: 42px; background: #0070C0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    box-shadow: 0 0 0 6px rgba(0,112,192,.2);
+  }
+  .lh-cw  { font-weight: 700; font-size: 16px; letter-spacing: 1.5px; color: white; text-transform: uppercase; }
+  .lh-sub { font-size: 10.5px; color: rgba(255,255,255,.45); letter-spacing: 1px; }
+  .lh-right { text-align: right; }
+  .lh-prog  { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 4px; }
+  .lh-date  { font-size: 13px; color: rgba(255,255,255,.7); }
+
+  /* Award banner */
+  .award-banner {
+    background: linear-gradient(135deg, #F5A623 0%, #FFD166 50%, #F5A623 100%);
+    padding: 0; text-align: center; position: relative; overflow: hidden;
+  }
+  .award-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .award-banner-inner { padding: 28px 48px; position: relative; z-index: 1; }
+  .ab-icon    { font-size: 44px; margin-bottom: 10px; display: block; filter: drop-shadow(0 4px 12px rgba(0,0,0,.2)); }
+  .ab-label   { font-size: 10px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: rgba(10,34,64,.65); margin-bottom: 6px; }
+  .ab-title   { font-family: Georgia, serif; font-weight: 900; font-size: 28px; color: #0A2240; line-height: 1.1; }
+  .ab-program { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(10,34,64,.5); margin-top: 6px; }
+
+  /* Letter body */
+  .letter-body { padding: 44px 48px 36px; background: white; }
+
+  /* Date & salutation */
+  .letter-date { font-size: 13px; color: #8BA8BF; margin-bottom: 24px; }
+  .salutation {
+    font-family: Georgia, serif; font-size: 20px; font-weight: 700; color: #0A2240;
+    margin-bottom: 24px; border-bottom: 2px dashed #C8DFF0;
+    display: inline-block; min-width: 280px; padding-bottom: 4px; outline: none;
+  }
+  .salutation:focus { background: #EBF5FF; }
+
+  /* Opening line */
+  .opening {
+    font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: #0A2240;
+    line-height: 1.45; margin-bottom: 20px; padding: 16px 20px;
+    background: #EBF5FF; border-left: 5px solid #0070C0; border-radius: 0 8px 8px 0;
+  }
+  .opening em { color: #0070C0; font-style: italic; }
+
+  /* Body paragraphs */
+  .para {
+    font-size: 14.5px; line-height: 1.8; color: #2D3748; margin-bottom: 18px;
+    outline: none; min-height: 24px;
+  }
+  .para:focus { background: #F8FBFF; border-radius: 4px; padding: 4px 6px; margin-left: -6px; }
+
+  /* Behaviour callout */
+  .behaviour-box {
+    background: linear-gradient(135deg, #EBF5FF, #F4F9FF);
+    border: 1px solid #C8DFF0; border-left: 5px solid #0070C0;
+    border-radius: 0 10px 10px 0; padding: 18px 22px; margin: 24px 0;
+  }
+  .bb-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0070C0; margin-bottom: 8px; }
+  .bb-pillar {
+    font-family: Georgia, serif; font-size: 17px; font-weight: 700; color: #0A2240;
+    margin-bottom: 6px;
+  }
+  .bb-quote {
+    font-size: 13.5px; color: #3D6080; line-height: 1.65; font-style: italic;
+    outline: none; border-bottom: 1.5px dashed #C8DFF0;
+    display: block; min-height: 22px; padding: 2px 0;
+  }
+  .bb-quote:focus { background: #EBF5FF; border-radius: 4px; padding: 2px 6px; }
+
+  /* Award line */
+  .award-line {
+    display: flex; align-items: center; gap: 16px;
+    background: #0A2240; border-radius: 10px; padding: 18px 22px; margin: 24px 0;
+  }
+  .al-icon { font-size: 28px; flex-shrink: 0; }
+  .al-text { }
+  .al-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #F5A623; margin-bottom: 4px; }
+  .al-award { font-size: 14px; font-weight: 700; color: white; }
+  .al-award select {
+    font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; color: #F5A623;
+    background: transparent; border: none; outline: none; cursor: pointer;
+    appearance: none; -webkit-appearance: none; max-width: 400px;
+  }
+  .al-award select option { background: #0A2240; }
+
+  /* Closing */
+  .closing-para {
+    font-family: Georgia, serif; font-size: 16px; font-weight: 700; color: #0A2240;
+    line-height: 1.55; font-style: italic; border-top: 2px solid #EEF3F8;
+    padding-top: 20px; margin-top: 20px; margin-bottom: 28px;
+    outline: none; min-height: 26px;
+  }
+  .closing-para:focus { background: #F8FBFF; border-radius: 4px; }
+
+  /* Signature block */
+  .sig-block { display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap; margin-bottom: 32px; }
+  .sig-left { flex: 1; }
+  .sig-warm { font-size: 14px; color: #2D3748; margin-bottom: 36px; }
+  .sig-line { height: 1.5px; width: 160px; background: #C8DFF0; margin-bottom: 6px; }
+  .sig-name {
+    font-family: Georgia, serif; font-weight: 700; font-size: 18px; color: #0A2240;
+    outline: none; border-bottom: 1.5px dashed #C8DFF0;
+    display: inline-block; min-width: 140px; padding: 1px 4px;
+  }
+  .sig-name:focus { background: #EBF5FF; }
+  .sig-role  { font-size: 12px; color: #6B8099; margin-top: 2px; }
+  .sig-org   { font-size: 12px; color: #0070C0; font-weight: 700; }
+
+  /* Award type badge (top right of sig block) */
+  .sig-right { text-align: center; flex-shrink: 0; }
+  .award-badge-circle {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #F5A623, #FFD166);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(245,166,35,.35);
+    font-size: 28px; margin: 0 auto 6px;
+  }
+  .badge-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8BA8BF; text-align: center; }
+
+  /* CWS seal */
+  .seal-row {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    border-top: 1px solid #EEF3F8; padding-top: 22px;
+    color: #8BA8BF; font-size: 12px; text-align: center;
+  }
+  .seal-dot { width: 30px; height: 30px; background: #0070C0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .seal-text { font-size: 11px; line-height: 1.45; }
+  .seal-text strong { color: #0A2240; }
+
+  /* Footer */
+  .letter-footer {
+    background: #F0F4F8; padding: 12px 48px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    border-top: 1px solid #E0EAF5;
+  }
+  .lf-prog { font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px; color: #3D6080; }
+  .lf-tag  { font-size: 10.5px; color: #8BA8BF; font-style: italic; }
+  .letter-botbar { height: 6px; background: linear-gradient(90deg, #0A2240 0%, #0070C0 50%, #00A3D9 100%); }
+
+  @media (max-width: 560px) {
+    .letter-body  { padding: 28px 24px 24px; }
+    .letterhead   { padding: 18px 24px; flex-direction: column; gap: 12px; }
+    .award-banner-inner { padding: 22px 24px; }
+    .sig-block    { flex-direction: column; }
+    .letter-footer { padding: 12px 24px; }
+  }
+  @media print {
+    body { background: white; padding: 0; }
+    .editor-bar, .action-bar, .selector-strip { display: none !important; }
+    #letterCard { box-shadow: none; max-width: 100%; border-radius: 0; }
+    [contenteditable] { border-bottom-color: transparent !important; background: transparent !important; }
+    select { appearance: none; -webkit-appearance: none; border: none !important; background: transparent !important; padding: 0 !important; background-image: none !important; }
+    .para:focus, .salutation:focus, .sig-name:focus, .bb-quote:focus, .opening:focus, .closing-para:focus { background: transparent !important; padding: 0 !important; margin-left: 0 !important; }
+    .letter-topbar { height: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="editor-bar">
+  ✏️ <strong>Click any field to edit directly.</strong> &nbsp;|&nbsp; Select award type, pillar, value &amp; reward from the controls above the letter &nbsp;|&nbsp; 🖨️ <strong>Print → Save as PDF</strong> to hand to the awardee or send by email
+</div>
+
+<!-- CONTROLS STRIP -->
+<div class="selector-strip">
+  <div class="ss-field">
+    <div class="ss-label">Award Type</div>
+    <select class="ss-sel" id="awardTypeSel" onchange="setAwardType()">
+      <option value="peer">🤝 Charter Champion (Peer-to-Peer)</option>
+      <option value="manager">🏆 Instant Impact (Manager-to-Staff)</option>
+      <option value="team">👥 Team Award (Quarterly)</option>
+      <option value="annual">⭐ Top 5 Champion (Annual)</option>
+    </select>
+  </div>
+  <div class="ss-field">
+    <div class="ss-label">Charter Pillar</div>
+    <select class="ss-sel" id="pillarCtrl" onchange="setPillar()">
+      <option value="" disabled selected>Select pillar…</option>
+      <option>1 — Professionalism &amp; Respect</option>
+      <option>2 — Empathy, Listening &amp; Understanding</option>
+      <option>3 — Effective &amp; Transparent Communication</option>
+      <option>4 — Proactive Problem Solving, Urgency &amp; Ownership</option>
+      <option>5 — Customer Centricity &amp; Insights Driven</option>
+      <option>6 — Accountability</option>
+      <option>7 — Innovation</option>
+      <option>8 — Continuous Improvement</option>
+    </select>
+  </div>
+  <div class="ss-field">
+    <div class="ss-label">Company Value</div>
+    <select class="ss-sel" id="valueCtrl" onchange="setValue()">
+      <option value="" disabled selected>Select value…</option>
+      <option>Customer</option><option>Team</option><option>Integrity</option>
+      <option>Respect</option><option>Accountability</option>
+    </select>
+  </div>
+  <div class="ss-field">
+    <div class="ss-label">Month</div>
+    <select class="ss-sel" id="monthCtrl" onchange="setMonth()">
+      <option>January 2026</option><option>February 2026</option><option>March 2026</option>
+      <option selected>April 2026</option><option>May 2026</option><option>June 2026</option>
+      <option>July 2026</option><option>August 2026</option><option>September 2026</option>
+      <option>October 2026</option><option>November 2026</option><option>December 2026</option>
+    </select>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  LETTER                                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div id="letterCard">
+
+  <div class="letter-topbar"></div>
+
+  <!-- LETTERHEAD -->
+  <div class="letterhead">
+    <div class="lh-brand">
+      <div class="lh-logo-row">
+        <div class="lh-globe">🌐</div>
+        <div>
+          <div class="lh-cw">Cable &amp; Wireless Seychelles</div>
+          <div class="lh-sub">Customer Centric Excellence</div>
+        </div>
+      </div>
+    </div>
+    <div class="lh-right">
+      <div class="lh-prog">CWS PULSE AWARDS</div>
+      <div class="lh-date" id="letterDate">April 2026</div>
+    </div>
+  </div>
+
+  <!-- AWARD BANNER -->
+  <div class="award-banner">
+    <div class="award-banner-inner">
+      <span class="ab-icon" id="abIcon">🤝</span>
+      <div class="ab-label">Award of Recognition</div>
+      <div class="ab-title" id="abTitle">The Charter Champion</div>
+      <div class="ab-program">CWS Pulse Awards · Peer-to-Peer Recognition</div>
+    </div>
+  </div>
+
+  <!-- LETTER BODY -->
+  <div class="letter-body">
+
+    <!-- Date line -->
+    <div class="letter-date" id="dateLine">April 2026</div>
+
+    <!-- Salutation -->
+    <div class="salutation" contenteditable="true" data-ph="Dear [ First Name ],">Dear [ First Name ],</div>
+    <div style="margin-bottom:22px;"></div>
+
+    <!-- Opening statement -->
+    <div class="opening" id="openingLine">
+      It is my great pleasure to formally recognise you as this month's <em id="openingAward">Charter Champion</em> — one of the most meaningful awards we give at Cable &amp; Wireless Seychelles.
+    </div>
+
+    <!-- Para 1 -->
+    <div class="para" contenteditable="true">
+      This award is not given lightly. It is reserved for those who go beyond their role — who choose to do the right thing even when no one is watching, who put the customer or their teammate first because that is simply who they are.
+    </div>
+
+    <!-- Behaviour callout -->
+    <div class="behaviour-box">
+      <div class="bb-label">📌 Charter Pillar Demonstrated</div>
+      <div class="bb-pillar" id="bbPillar">Select a Charter Pillar above</div>
+      <div class="bb-quote" contenteditable="true" data-ph="Describe the specific behaviour or action that earned this award...">Describe the specific behaviour or action that earned this award...</div>
+    </div>
+
+    <!-- Para 2 -->
+    <div class="para" contenteditable="true" id="para2">
+      What you did is a textbook example of how our Customer Centric Charter comes to life. You did not just follow a process — you took ownership, you showed empathy, and you made a difference that was felt. That is what living the Charter truly means.
+    </div>
+
+    <!-- Award line -->
+    <div class="award-line">
+      <div class="al-icon">🎁</div>
+      <div class="al-text">
+        <div class="al-label">Your Recognition Reward</div>
+        <div class="al-award">
+          <select id="rewardSel">
+            <option value="">Select the reward given…</option>
+            <option>Influence Without Title — Temporary seat in the Joint Consultative Committee (JCC)</option>
+            <option>Policy Review Contributor — Invited to review a process that affects customers</option>
+            <option>Internal Podcast / Video Feature — Share your story and approach with the team</option>
+            <option>Silent Recognition Drop — Surprise acknowledgement delivered by CEO or Chief</option>
+            <option>Special Assignments — Consideration for a high-visibility project or task force</option>
+            <option>VIP Access — Access to a company event, strategy session or SLT meeting</option>
+            <option>Time &amp; Flexibility — Early-finish passes or remote work privileges</option>
+            <option>Symbolic / Branded Reward — A loyalty item of your choice from our selection</option>
+            <option>Charity Day &amp; Volunteer — Nominate a charity and volunteer for a day</option>
+            <option>Exposure within CWS — 2 days cross-functional in any department of your choice</option>
+            <option>Free Data Gift — A data package (5GB / 10GB) to gift to a family member</option>
+            <option>SR 500 Cash Award + Memorabilia</option>
+            <option>SR 5,000 Cash Award + Individual Trophy (Top 5 Annual Champion)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Para 3 -->
+    <div class="para" contenteditable="true">
+      You are a reminder of why this organisation is more than a telecommunications company. You are living proof that great customer experience starts with people who genuinely care — and we are proud to have you on this team.
+    </div>
+
+    <!-- Closing -->
+    <div class="closing-para" contenteditable="true">
+      "Keep being the standard. Keep leading by example. And know that your team, your managers, and your leadership have seen you — and are grateful."
+    </div>
+
+    <!-- Signature block -->
+    <div class="sig-block">
+      <div class="sig-left">
+        <div class="sig-warm">With sincere recognition,</div>
+        <div class="sig-line"></div>
+        <div class="sig-name" contenteditable="true" data-ph="[ Name ]">Maria Pouponneau</div>
+        <div class="sig-role" id="sigRole">Chief Customer Centric Officer</div>
+        <div class="sig-org">Cable &amp; Wireless Seychelles</div>
+      </div>
+      <div class="sig-right">
+        <div class="award-badge-circle" id="badgeCircle">🤝</div>
+        <div class="badge-label" id="badgeLabel">Charter<br>Champion</div>
+      </div>
+    </div>
+
+    <!-- Seal -->
+    <div class="seal-row">
+      <div class="seal-dot">🌐</div>
+      <div class="seal-text">
+        <strong>CWS PULSE AWARDS — OFFICIAL RECOGNITION LETTER</strong><br>
+        Living the Charter. Leading the Techco. &nbsp;|&nbsp; Customer Centric Excellence Programme
+      </div>
+      <div class="seal-dot">⭐</div>
+    </div>
+
+  </div>
+
+  <div class="letter-footer">
+    <div class="lf-prog">CWS PULSE AWARDS · PERSONALISED AWARD LETTER</div>
+    <div class="lf-tag">Living the Charter. Leading the Techco.</div>
+  </div>
+  <div class="letter-botbar"></div>
+
+</div>
+
+<div class="action-bar">
+  <button class="abtn abtn-gold" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  <button class="abtn abtn-blue" onclick="copyCard()">📋 Copy to Email</button>
+  <button class="abtn abtn-ghost" onclick="resetAll()">↺ Reset</button>
+</div>
+
+<script>
+const AWARD_CONFIGS = {
+  peer: {
+    icon: '🤝', title: 'The Charter Champion', program: 'CWS Pulse Awards · Peer-to-Peer Recognition',
+    openingAward: 'Charter Champion', sigRole: 'Chief Customer Centric Officer',
+    badgeIcon: '🤝', badgeLabel: 'Charter\nChampion', topbar: 'linear-gradient(90deg,#0A2240,#0070C0,#00A3D9)',
+  },
+  manager: {
+    icon: '🏆', title: 'The Instant Impact Award', program: 'CWS Pulse Awards · Manager-to-Staff Recognition',
+    openingAward: 'Instant Impact Awardee', sigRole: 'Chief Customer Centric Officer',
+    badgeIcon: '🏆', badgeLabel: 'Instant\nImpact', topbar: 'linear-gradient(90deg,#8B4E00,#F5A623,#FFD166,#F5A623,#8B4E00)',
+  },
+  team: {
+    icon: '👥', title: 'The Team Award', program: 'CWS Pulse Awards · Quarterly SLT Team Recognition',
+    openingAward: 'Team Award recipient', sigRole: 'Chief Customer Centric Officer',
+    badgeIcon: '👥', badgeLabel: 'Team\nAward', topbar: 'linear-gradient(90deg,#0D7A55,#00A3D9)',
+  },
+  annual: {
+    icon: '⭐', title: 'Top 5 Customer Centric Champion', program: 'CWS Pulse Awards · Annual Champions — Customer Service Week',
+    openingAward: 'Top 5 Customer Centric Champion', sigRole: 'Chief Executive Officer',
+    badgeIcon: '⭐', badgeLabel: 'Top 5\nChampion', topbar: 'linear-gradient(90deg,#8B4E00,#F5A623,#FFD166,#F5A623,#8B4E00)',
+  },
+};
+
+function setAwardType() {
+  const val = document.getElementById('awardTypeSel').value;
+  const cfg = AWARD_CONFIGS[val];
+  document.getElementById('abIcon').textContent    = cfg.icon;
+  document.getElementById('abTitle').textContent   = cfg.title;
+  document.querySelector('.ab-program').textContent = cfg.program;
+  document.getElementById('openingAward').textContent = cfg.openingAward;
+  document.getElementById('sigRole').textContent   = cfg.sigRole;
+  document.getElementById('badgeCircle').textContent = cfg.badgeIcon;
+  document.getElementById('badgeLabel').innerHTML  = cfg.badgeLabel.replace('\n','<br>');
+  document.querySelector('.letter-topbar').style.background = cfg.topbar;
+  document.querySelector('.letter-botbar').style.background = cfg.topbar;
+}
+
+function setPillar() {
+  const val = document.getElementById('pillarCtrl').value;
+  document.getElementById('bbPillar').textContent = val || 'Select a Charter Pillar above';
+}
+
+function setValue() { /* stored for reference */ }
+
+function setMonth() {
+  const m = document.getElementById('monthCtrl').value;
+  document.getElementById('letterDate').textContent = m;
+  document.getElementById('dateLine').textContent   = m;
+}
+
+// Placeholder behaviour
+document.querySelectorAll('[contenteditable][data-ph]').forEach(el => {
+  el.style.color = '#AABFCF';
+  el.addEventListener('focus', () => { if (el.textContent.trim() === el.dataset.ph) { el.textContent = ''; el.style.color = ''; } });
+  el.addEventListener('blur',  () => { if (!el.textContent.trim()) { el.textContent = el.dataset.ph; el.style.color = '#AABFCF'; } });
+});
+document.querySelector('.salutation').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.querySelector('.salutation').blur(); } });
+document.querySelector('.sig-name').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.querySelector('.sig-name').blur(); } });
+
+function copyCard() {
+  const el = document.getElementById('letterCard');
+  const range = document.createRange(); range.selectNode(el);
+  window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+  try { document.execCommand('copy'); } catch(e) {}
+  window.getSelection().removeAllRanges();
+  const btn = event.target; btn.textContent = '✅ Copied!';
+  setTimeout(() => btn.textContent = '📋 Copy to Email', 2500);
+}
+
+function resetAll() {
+  document.getElementById('awardTypeSel').selectedIndex = 0; setAwardType();
+  document.getElementById('pillarCtrl').selectedIndex   = 0; setPillar();
+  document.getElementById('valueCtrl').selectedIndex    = 0;
+  document.getElementById('monthCtrl').selectedIndex    = 3; setMonth();
+  document.getElementById('rewardSel').selectedIndex    = 0;
+  document.querySelectorAll('[contenteditable][data-ph]').forEach(el => {
+    el.textContent = el.dataset.ph; el.style.color = '#AABFCF';
+  });
+}
+
+// Init
+setAwardType();
+</script>
+</body>
+</html>

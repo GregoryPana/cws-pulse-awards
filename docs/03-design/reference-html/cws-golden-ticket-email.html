@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWS Golden Ticket — CEO Email Template</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ── PAGE WRAPPER (editor UI only) ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: #1a2a3a;
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+  }
+  .page-label {
+    text-align: center;
+    color: #90B8D8;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+  }
+  .editor-hint {
+    background: rgba(245,166,35,.12);
+    border: 1px solid rgba(245,166,35,.3);
+    border-radius: 8px;
+    padding: 12px 18px;
+    color: #F5C842;
+    font-size: 13px;
+    text-align: center;
+    margin: 0 auto 24px;
+    max-width: 680px;
+    line-height: 1.5;
+  }
+  .editor-hint strong { font-weight: 700; }
+
+  /* ── EMAIL WRAPPER ── */
+  .email-outer {
+    max-width: 680px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  /* ── HEADER BAND ── */
+  .email-header {
+    background: #0A2240;
+    padding: 0;
+    position: relative;
+  }
+  .header-top-stripe {
+    background: #F5A623;
+    height: 5px;
+  }
+  .header-inner {
+    padding: 28px 36px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .header-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .brand-cw {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 1.5px;
+    color: #ffffff;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: #6B9DC0;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+  }
+  .header-award {
+    text-align: right;
+  }
+  .award-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245,166,35,0.15);
+    border: 1px solid rgba(245,166,35,0.4);
+    border-radius: 20px;
+    padding: 6px 14px;
+    color: #F5A623;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* ── GOLD HERO BANNER ── */
+  .hero-banner {
+    background: linear-gradient(135deg, #0A2240 0%, #0d3060 50%, #0A2240 100%);
+    padding: 42px 36px 36px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: 50%;
+    transform: translateX(-50%);
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .ticket-icon {
+    font-size: 48px;
+    margin-bottom: 14px;
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(245,166,35,0.4));
+  }
+  .hero-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    color: #F5A623;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .hero-subtitle {
+    font-size: 15px;
+    color: #90B8D8;
+    font-style: italic;
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+  .gold-divider {
+    width: 60px;
+    height: 3px;
+    background: #F5A623;
+    border-radius: 3px;
+    margin: 18px auto 0;
+  }
+
+  /* ── BODY ── */
+  .email-body {
+    padding: 36px 36px 28px;
+    background: #ffffff;
+  }
+
+  /* Intro text */
+  .intro-text {
+    font-size: 15px;
+    color: #2D3748;
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+  .intro-text strong { color: #0A2240; font-weight: 700; }
+
+  /* ── AWARDEE CARDS ── */
+  .awardees-section {
+    margin-bottom: 28px;
+  }
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #8BA8BF;
+    margin-bottom: 14px;
+  }
+
+  .awardee-card {
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid #E0EAF5;
+    box-shadow: 0 2px 8px rgba(10,34,64,0.06);
+  }
+  .awardee-card:last-child { margin-bottom: 0; }
+
+  .card-header {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header.peer-hdr { background: #0070C0; }
+  .card-header.mgr-hdr  { background: #0A2240; }
+
+  .card-type-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.12);
+    border-radius: 12px;
+    padding: 3px 10px;
+    flex-shrink: 0;
+  }
+  .card-pillar-tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #F5A623;
+    background: rgba(245,166,35,0.15);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 12px;
+    padding: 3px 10px;
+    margin-left: auto;
+  }
+
+  .card-body {
+    padding: 18px 20px;
+    background: #F7FAFD;
+  }
+  .awardee-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0A2240;
+    margin-bottom: 2px;
+    outline: none;
+    border-bottom: 2px dashed #BDD3E8;
+    display: inline-block;
+    min-width: 220px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: background .15s, border-color .15s;
+  }
+  .awardee-name:focus {
+    background: #EBF5FF;
+    border-bottom-color: #0070C0;
+    border-radius: 4px;
+  }
+  .awardee-role {
+    font-size: 13px;
+    color: #6B8099;
+    margin-bottom: 12px;
+    outline: none;
+    border-bottom: 1.5px dashed #D0E0F0;
+    display: inline-block;
+    min-width: 200px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    transition: background .15s;
+  }
+  .awardee-role:focus { background: #EBF5FF; border-bottom-color: #0070C0; }
+
+  .story-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #8BA8BF;
+    margin-bottom: 6px;
+  }
+  .story-text {
+    font-size: 14px;
+    color: #2D3748;
+    line-height: 1.65;
+    background: #ffffff;
+    border: 1.5px solid #D8E8F5;
+    border-radius: 7px;
+    padding: 12px 14px;
+    min-height: 80px;
+    outline: none;
+    width: 100%;
+    display: block;
+    font-family: 'Barlow', sans-serif;
+    resize: vertical;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .story-text:focus {
+    border-color: #0070C0;
+    box-shadow: 0 0 0 3px rgba(0,112,192,0.1);
+  }
+
+  /* ── CHARTER PILLAR MENTION ── */
+  .pillar-note {
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #E8F4FF;
+    border-radius: 6px;
+    border-left: 3px solid #0070C0;
+  }
+  .pillar-note-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .pillar-select {
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    color: #0A2240;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    padding: 0;
+  }
+
+  /* ── CLOSING MESSAGE ── */
+  .closing-box {
+    background: #F0F6FF;
+    border: 1px solid #D0E4F5;
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 28px;
+  }
+  .closing-text {
+    font-size: 15px;
+    color: #2D3748;
+    line-height: 1.7;
+    outline: none;
+    width: 100%;
+    display: block;
+    font-family: 'Barlow', sans-serif;
+    background: transparent;
+    border: none;
+    resize: vertical;
+    min-height: 90px;
+  }
+  .closing-text:focus { outline: none; }
+
+  /* ── SIGNATURE BLOCK ── */
+  .signature {
+    border-top: 1px solid #E0EAF5;
+    padding-top: 22px;
+    margin-top: 4px;
+  }
+  .sig-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #0A2240;
+    margin-bottom: 2px;
+    outline: none;
+    border-bottom: 1.5px dashed #BDD3E8;
+    display: inline-block;
+    min-width: 180px;
+    padding: 1px 4px;
+    transition: background .15s;
+  }
+  .sig-name:focus { background: #EBF5FF; border-bottom-color: #0070C0; }
+  .sig-title {
+    font-size: 13px;
+    color: #6B8099;
+    margin-bottom: 2px;
+  }
+  .sig-company {
+    font-size: 13px;
+    color: #0070C0;
+    font-weight: 600;
+  }
+
+  /* ── FOOTER ── */
+  .email-footer {
+    background: #0A2240;
+    padding: 20px 36px;
+    text-align: center;
+  }
+  .footer-award-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: #F5A623;
+    margin-bottom: 4px;
+  }
+  .footer-tagline {
+    font-size: 11px;
+    color: #4A6A85;
+    font-style: italic;
+  }
+  .footer-bottom-stripe {
+    background: #F5A623;
+    height: 4px;
+  }
+
+  /* ── PRINT / COPY BUTTON ── */
+  .action-bar {
+    max-width: 680px;
+    margin: 24px auto 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 11px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-print {
+    background: #F5A623;
+    color: #0A2240;
+    box-shadow: 0 4px 12px rgba(245,166,35,.3);
+  }
+  .btn-print:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(245,166,35,.45); }
+  .btn-copy {
+    background: rgba(255,255,255,.08);
+    color: #90B8D8;
+    border: 1px solid rgba(144,184,216,.25);
+  }
+  .btn-copy:hover { background: rgba(255,255,255,.14); }
+
+  /* ── EDIT TOOLTIPS ── */
+  [contenteditable="true"]:hover {
+    background: rgba(0,112,192,0.04);
+    border-radius: 3px;
+  }
+  [contenteditable="true"]::before {
+    content: attr(data-placeholder);
+    color: #AABFCF;
+    pointer-events: none;
+  }
+  [contenteditable="true"]:not(:empty)::before { content: none; }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page-label, .editor-hint, .action-bar { display: none !important; }
+    .email-outer { box-shadow: none; border-radius: 0; }
+    [contenteditable] { border-bottom-color: transparent !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-label">CWS Pulse Awards — Golden Ticket CEO Email Template</div>
+
+<div class="editor-hint">
+  ✏️ <strong>Click any highlighted field to edit.</strong> Fill in the two awardee names, roles, stories and Charter Pillars — then print or copy the email to send.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  EMAIL                                                      -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="email-outer">
+
+  <!-- HEADER -->
+  <div class="email-header">
+    <div class="header-top-stripe"></div>
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="brand-cw">CABLE &amp; WIRELESS</div>
+        <div class="brand-sub">SEYCHELLES</div>
+      </div>
+      <div class="header-award">
+        <div class="award-badge">🎟️ The Golden Ticket</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO BANNER -->
+  <div class="hero-banner">
+    <span class="ticket-icon">🏆</span>
+    <div class="hero-title">THIS MONTH'S GOLDEN TICKET</div>
+    <div class="hero-subtitle">Two colleagues who showed us what it means to truly live our Customer Centric Charter</div>
+    <div class="gold-divider"></div>
+  </div>
+
+  <!-- BODY -->
+  <div class="email-body">
+
+    <!-- Intro -->
+    <div class="intro-text">
+      Dear CWS Team,<br><br>
+      Every month I have the privilege of reading the nominations that come through our Pulse Awards programme. Each one is a reminder of the extraordinary people we have in this organisation.<br><br>
+      This month, two stories stood out above all others. I want to take a moment to share them with every one of you — because <strong>what these colleagues did is what our Charter looks like in action.</strong>
+    </div>
+
+    <!-- Awardee Cards -->
+    <div class="awardees-section">
+      <div class="section-label">🎟️ This Month's Golden Ticket Awardees</div>
+
+      <!-- CARD 1: PEER -->
+      <div class="awardee-card">
+        <div class="card-header peer-hdr">
+          <span class="card-type-badge">🤝 Charter Champion — Peer Award</span>
+          <span class="card-pillar-tag" id="pillar1-tag">Pillar: Select below</span>
+        </div>
+        <div class="card-body">
+          <div
+            class="awardee-name"
+            contenteditable="true"
+            data-placeholder="[ Awardee Full Name ]"
+            oninput="this.style.minWidth='220px'">
+          </div><br>
+          <div
+            class="awardee-role"
+            contenteditable="true"
+            data-placeholder="[ Job Title — Department ]">
+          </div>
+          <div class="story-label">Their Story</div>
+          <textarea class="story-text"
+            placeholder="Describe what this colleague did — their specific action, the customer or situation involved, and why it was remarkable. Write it in your own words, as personally as you can..."></textarea>
+          <div class="pillar-note">
+            <span class="pillar-note-icon">📌</span>
+            <select class="pillar-select" onchange="document.getElementById('pillar1-tag').textContent = 'Pillar: ' + this.options[this.selectedIndex].text">
+              <option value="">— Select the Charter Pillar this reflects —</option>
+              <option>1 — Professionalism &amp; Respect</option>
+              <option>2 — Empathy, Listening &amp; Understanding</option>
+              <option>3 — Effective &amp; Transparent Communication</option>
+              <option>4 — Proactive Problem Solving &amp; Ownership</option>
+              <option>5 — Customer Centricity &amp; Insights Driven</option>
+              <option>6 — Accountability</option>
+              <option>7 — Innovation</option>
+              <option>8 — Continuous Improvement</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: MANAGER -->
+      <div class="awardee-card">
+        <div class="card-header mgr-hdr">
+          <span class="card-type-badge">🏆 Instant Impact — Manager Award</span>
+          <span class="card-pillar-tag" id="pillar2-tag">Pillar: Select below</span>
+        </div>
+        <div class="card-body">
+          <div
+            class="awardee-name"
+            contenteditable="true"
+            data-placeholder="[ Awardee Full Name ]">
+          </div><br>
+          <div
+            class="awardee-role"
+            contenteditable="true"
+            data-placeholder="[ Job Title — Department ]">
+          </div>
+          <div class="story-label">Their Story</div>
+          <textarea class="story-text"
+            placeholder="Describe what this colleague did — the specific situation, the impact they made, and why their manager put them forward. Keep it personal and vivid..."></textarea>
+          <div class="pillar-note">
+            <span class="pillar-note-icon">📌</span>
+            <select class="pillar-select" onchange="document.getElementById('pillar2-tag').textContent = 'Pillar: ' + this.options[this.selectedIndex].text">
+              <option value="">— Select the Charter Pillar this reflects —</option>
+              <option>1 — Professionalism &amp; Respect</option>
+              <option>2 — Empathy, Listening &amp; Understanding</option>
+              <option>3 — Effective &amp; Transparent Communication</option>
+              <option>4 — Proactive Problem Solving &amp; Ownership</option>
+              <option>5 — Customer Centricity &amp; Insights Driven</option>
+              <option>6 — Accountability</option>
+              <option>7 — Innovation</option>
+              <option>8 — Continuous Improvement</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Closing message -->
+    <div class="closing-box">
+      <textarea class="closing-text" placeholder="Write your closing message here — for example:
+
+To both of you: thank you. Not just for what you did, but for how you did it. You reminded every one of us what it means to be part of Cable &amp; Wireless Seychelles.
+
+To the rest of the team — these stories are not the exception. They are the standard we are building together. Keep nominating the people around you who make a difference.
+
+Living the Charter. Leading the Techco."></textarea>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">
+      <div
+        class="sig-name"
+        contenteditable="true"
+        data-placeholder="[ CEO Name ]">
+      </div>
+      <div class="sig-title">Chief Executive Officer</div>
+      <div class="sig-company">Cable &amp; Wireless Seychelles</div>
+    </div>
+
+  </div><!-- /email-body -->
+
+  <!-- FOOTER -->
+  <div class="email-footer">
+    <div class="footer-award-name">CWS PULSE AWARDS  ·  THE GOLDEN TICKET</div>
+    <div class="footer-tagline">Living the Charter. Leading the Techco.</div>
+  </div>
+  <div class="footer-bottom-stripe"></div>
+
+</div><!-- /email-outer -->
+
+<!-- ACTION BUTTONS -->
+<div class="action-bar">
+  <button class="action-btn btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  <button class="action-btn btn-copy" onclick="copyEmail()">📋 Copy Email Content</button>
+</div>
+
+<script>
+function copyEmail() {
+  const el = document.querySelector('.email-outer');
+  const range = document.createRange();
+  range.selectNode(el);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+  try {
+    document.execCommand('copy');
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Email Content', 2500);
+  } catch(e) {}
+  window.getSelection().removeAllRanges();
+}
+
+// Auto-grow textareas
+document.querySelectorAll('textarea').forEach(ta => {
+  ta.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = this.scrollHeight + 'px';
+  });
+});
+
+// Prevent Enter creating new lines in name fields
+document.querySelectorAll('[contenteditable]').forEach(el => {
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+  });
+});
+</script>
+</body>
+</html>
