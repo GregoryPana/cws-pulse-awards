@@ -1,6 +1,18 @@
 <!-- PLACEHOLDER: Replace with MJML-compiled output -->
 <!-- Jinja2 variables below must be preserved when replaced -->
 <html><body>
-<p>{{ winner_first_name }} {{ winner_last_name }} - {{ award_type_label }}</p>
-<p>{{ ceo_message }}</p>
+<h1>CWS Golden Ticket</h1>
+<p>Congratulations {{ winner_first_name }} {{ winner_last_name }}!</p>
+<p>{{ winner_job_title }}, {{ winner_department }}</p>
+<p>{{ subcategory }} — {{ charter_pillar }} — {{ company_value }}</p>
+<p>{{ story }}</p>
+<p>Nominated by {{ nominated_by }}</p>
+<p>{{ award_month }}</p>
+{% if occasion_label %}<p>{{ occasion_label }}</p>{% endif %}
+<blockquote>{{ ceo_message }}</blockquote>
+<p>{{ ceo_name }}, {{ ceo_title }}</p>
+<p>{{ ccco_name }}, {{ ccco_title }}</p>
+{% if chief_pc_name %}<p>{{ chief_pc_name }}, {{ chief_pc_title }}</p>{% endif %}
+<p><a href="{{ hall_of_fame_url }}">View the Hall of Fame</a></p>
+{% if photo_url %}<img src="{{ photo_url }}" alt="{{ winner_first_name }} {{ winner_last_name }}" />{% endif %}
 </body></html>

@@ -14,7 +14,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
 def test_alembic_upgrade_head_and_seed_counts() -> None:
-    """The initial migration should apply and seed the required Phase 0 data."""
+    """The migration chain should apply and seed all Phase 0 data including winners and recipients."""
 
     subprocess.run(
         [sys.executable, "-m", "alembic", "upgrade", "head"],
@@ -33,15 +33,28 @@ def test_alembic_upgrade_head_and_seed_counts() -> None:
                     (SELECT COUNT(*) FROM config_pillars),
                     (SELECT COUNT(*) FROM config_values),
                     (SELECT COUNT(*) FROM config_subcategories),
-                    (SELECT COUNT(*) FROM config_settings)
+                    (SELECT COUNT(*) FROM config_settings),
+                    (SELECT COUNT(*) FROM email_recipients WHERE created_by = 'system'),
+                    (SELECT COUNT(*) FROM winners WHERE created_by = 'admin@cwseychelles.com')
                 """
             )
-            pillars, values, subcategories, settings_count = cursor.fetchone()
+            (
+                pillars,
+                values,
+                subcategories,
+                settings_count,
+                email_recipient_count,
+                winner_count,
+            ) = cursor.fetchone()
 
     assert pillars == 8
     assert values == 5
     assert subcategories == 6
     assert settings_count >= 1
+    assert email_recipient_count == 3, (
+        f"Expected 3 email recipients, got {email_recipient_count}"
+    )
+    assert winner_count == 12, f"Expected 12 winners, got {winner_count}"
 
 
 def test_pdf_sidecar_renders_pdf_bytes() -> None:
@@ -57,7 +70,10 @@ def test_pdf_sidecar_renders_pdf_bytes() -> None:
     for _ in range(5):
         response = httpx.post(
             "http://127.0.0.1:8001/generate",
-            json={"html": "<html><body><h1>Pulse Awards</h1></body></html>", "filename": "phase0-test.pdf"},
+            json={
+                "html": "<html><body><h1>Pulse Awards</h1></body></html>",
+                "filename": "phase0-test.pdf",
+            },
             timeout=30.0,
         )
         if response.is_success:

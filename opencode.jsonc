@@ -3,5 +3,16 @@
   "instructions": ["OPENCODE.md"],
   "skills": {
     "paths": [".opencode/skills"]
+  },
+  "mcp": {
+    "codegraph": {
+      "type": "local",
+      "command": [
+        "codegraph",
+        "serve",
+        "--mcp"
+      ],
+      "enabled": true
+    }
   }
 }
