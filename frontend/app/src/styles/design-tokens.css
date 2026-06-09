@@ -1,0 +1,32 @@
+:root {
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', Arial, sans-serif;
+  --font-label: 'Outfit', Arial, sans-serif;
+
+  --color-navy: #0A2240;
+  --color-deep: #060F1E;
+  --color-blue: #0070C0;
+  --color-sky: #00A3D9;
+  --color-gold: #F5A623;
+  --color-gold-soft: #FFD166;
+  --color-amber: #E8870A;
+  --color-white: #FFFFFF;
+  --color-mid-gray: #6B8099;
+  --color-dark-gray: #2D3748;
+  --color-mist: rgba(255, 255, 255, 0.06);
+  --color-mist-md: rgba(255, 255, 255, 0.10);
+
+  --radius-card: 18px;
+  --radius-modal: 16px;
+  --radius-badge: 20px;
+  --radius-tag: 6px;
+  --radius-btn: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

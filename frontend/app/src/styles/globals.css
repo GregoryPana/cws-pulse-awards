@@ -1,0 +1,20 @@
+@import './design-tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: rgba(245, 166, 35, 0.25);
+  color: white;
+}
