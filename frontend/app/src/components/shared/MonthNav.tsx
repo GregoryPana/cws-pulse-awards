@@ -4,6 +4,7 @@ interface Props {
   activeMonth: string
   onChange: (month: string) => void
   variant: 'blue' | 'gold'
+  year: number
 }
 
 const MONTHS = [
@@ -17,7 +18,7 @@ function monthLabel(m: string, currentYear: number): string {
   return `${m} ${currentYear}`
 }
 
-export default function MonthNav({ activeMonth, onChange, variant }: Props) {
+export default function MonthNav({ activeMonth, onChange, variant, year }: Props) {
   const navRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -32,8 +33,6 @@ export default function MonthNav({ activeMonth, onChange, variant }: Props) {
     el.addEventListener('wheel', handleWheel, { passive: false })
     return () => el.removeEventListener('wheel', handleWheel)
   }, [])
-
-  const year = new Date().getFullYear()
 
   const activeClass =
     variant === 'blue'

@@ -29,7 +29,7 @@ export function useWinners(
   const [state, setState] = useState<LoadState>('idle')
   const [error, setError] = useState<string | null>(null)
 
-  const effectiveMonth = month ?? currentMonthLabel()
+  const effectiveMonth = month === 'All' ? undefined : month ?? currentMonthLabel()
   const effectiveYear = year
 
   const load = useCallback(() => {

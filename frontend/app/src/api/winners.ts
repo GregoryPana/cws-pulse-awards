@@ -9,16 +9,18 @@ export interface WinnerPublic {
   award_type: string
   subcategory: string
   charter_pillar: string
-  company_value: string | null
+  company_value: string
   story: string
   nominated_by: string | null
   award_month: string
   award_year: number
   golden_ticket: boolean
   golden_ticket_occasion: string | null
+  is_top_five: boolean
+  top_five_rank: number | null
+  top_five_year: number | null
   photo_url: string | null
   status: string
-  created_at: string
 }
 
 export interface WinnersResponse {

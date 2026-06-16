@@ -3,25 +3,20 @@ import { get } from './client'
 export interface Pillar {
   id: number
   name: string
-  description: string | null
   sort_order: number
-  active: boolean
 }
 
 export interface CompanyValue {
   id: number
   name: string
-  description: string | null
   sort_order: number
-  active: boolean
 }
 
 export interface Subcategory {
   id: number
   name: string
   award_type: string
-  description: string | null
-  active: boolean
+  sort_order: number
 }
 
 export function fetchPillars(): Promise<Pillar[]> {

@@ -2,31 +2,54 @@ import { useState, useMemo } from 'react'
 import AnimatedBackground from '../components/shared/AnimatedBackground'
 import Header from '../components/layout/Header'
 import MonthNav from '../components/shared/MonthNav'
+import HallFilters from '../components/shared/HallFilters'
 import AwardCard from '../components/shared/AwardCard'
 import EmptyState from '../components/shared/EmptyState'
 import { useWinners } from '../hooks/useWinners'
+import { useSubcategories } from '../hooks/useConfig'
 
 const MONTHS_SHORT = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ]
 
+function filterYears(currentYear: number): number[] {
+  const startYear = 2026
+  const endYear = Math.max(currentYear, startYear)
+  return Array.from({ length: endYear - startYear + 1 }, (_, index) => endYear - index)
+}
+
 export default function InstantImpact() {
   const now = new Date()
   const defaultMonth = `${MONTHS_SHORT[now.getMonth()]} ${now.getFullYear()}`
   const [activeMonth, setActiveMonth] = useState(defaultMonth)
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedCategory, setSelectedCategory] = useState('All')
 
-  const { winners, state } = useWinners('INSTANT_IMPACT', activeMonth)
+  const { winners, state } = useWinners('INSTANT_IMPACT', activeMonth, selectedYear)
+  const { subcategories } = useSubcategories('INSTANT_IMPACT')
+
+  const categories = useMemo(
+    () => subcategories.map((subcategory) => subcategory.name),
+    [subcategories],
+  )
 
   const sorted = useMemo(
     () =>
-      [...winners].sort((a, b) => {
+      winners
+        .filter(
+          (winner) =>
+            selectedCategory === 'All' || winner.subcategory === selectedCategory,
+        )
+        .sort((a, b) => {
         if (a.golden_ticket && !b.golden_ticket) return -1
         if (!a.golden_ticket && b.golden_ticket) return 1
         return 0
       }),
-    [winners],
+    [selectedCategory, winners],
   )
+
+  const heroPeriod = activeMonth === 'All' ? `All months in ${selectedYear}` : activeMonth
 
   return (
     <div className="relative min-h-screen bg-deep overflow-hidden">
@@ -52,7 +75,10 @@ export default function InstantImpact() {
           <div className="inline-flex items-center gap-2 bg-gold/8 border border-gold/20 rounded-[24px] px-5 py-2 animate-fadeUp opacity-0 [animation-delay:0.55s]">
             <span className="font-body text-sm text-white/60 tracking-wide">
               Showing{' '}
-              <span className="font-bold text-gold">{activeMonth}</span>
+              <span className="font-bold text-gold">{heroPeriod}</span>
+              {selectedCategory !== 'All' && (
+                <span className="hidden sm:inline"> · {selectedCategory}</span>
+              )}
             </span>
           </div>
         </section>
@@ -63,6 +89,22 @@ export default function InstantImpact() {
           activeMonth={activeMonth}
           onChange={setActiveMonth}
           variant="gold"
+          year={selectedYear}
+        />
+
+        <HallFilters
+          variant="gold"
+          selectedYear={selectedYear}
+          years={filterYears(now.getFullYear())}
+          onYearChange={(year) => {
+            setSelectedYear(year)
+            if (activeMonth !== 'All') {
+              setActiveMonth(`${activeMonth.slice(0, 3)} ${year}`)
+            }
+          }}
+          selectedCategory={selectedCategory}
+          categories={categories}
+          onCategoryChange={setSelectedCategory}
         />
 
         <section className="max-w-[1100px] mx-auto px-8 pb-20">
@@ -84,7 +126,7 @@ export default function InstantImpact() {
           )}
 
           {state === 'success' && sorted.length === 0 && (
-            <EmptyState message="No Instant Impact awards posted for this month yet." />
+            <EmptyState message="No Instant Impact awards match these filters yet." />
           )}
 
           {state === 'success' && sorted.length > 0 && (
