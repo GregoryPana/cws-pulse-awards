@@ -1,18 +1,53 @@
-<!-- PLACEHOLDER: Replace with MJML-compiled output -->
-<!-- Jinja2 variables below must be preserved when replaced -->
-<html><body>
-<h1>CWS Golden Ticket</h1>
-<p>Congratulations {{ winner_first_name }} {{ winner_last_name }}!</p>
-<p>{{ winner_job_title }}, {{ winner_department }}</p>
-<p>{{ subcategory }} — {{ charter_pillar }} — {{ company_value }}</p>
-<p>{{ story }}</p>
-<p>Nominated by {{ nominated_by }}</p>
-<p>{{ award_month }}</p>
-{% if occasion_label %}<p>{{ occasion_label }}</p>{% endif %}
-<blockquote>{{ ceo_message }}</blockquote>
-<p>{{ ceo_name }}, {{ ceo_title }}</p>
-<p>{{ ccco_name }}, {{ ccco_title }}</p>
-{% if chief_pc_name %}<p>{{ chief_pc_name }}, {{ chief_pc_title }}</p>{% endif %}
-<p><a href="{{ hall_of_fame_url }}">View the Hall of Fame</a></p>
-{% if photo_url %}<img src="{{ photo_url }}" alt="{{ winner_first_name }} {{ winner_last_name }}" />{% endif %}
-</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CWS Golden Ticket</title>
+</head>
+<body style="margin:0; padding:0; background:#1A2430; font-family:Arial, Helvetica, sans-serif; color:#2D3748;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1A2430; margin:0; padding:28px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="680" cellpadding="0" cellspacing="0" style="width:680px; max-width:100%; background:#FFFFFF; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.50);">
+          <tr><td style="height:6px; background:#F5A623; line-height:6px; font-size:0;">&nbsp;</td></tr>
+          <tr>
+            <td style="background:#0A2240; padding:28px 36px 22px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td><div style="font-size:18px; line-height:22px; font-weight:700; letter-spacing:1.4px; color:#FFFFFF; text-transform:uppercase;">Cable &amp; Wireless Seychelles</div><div style="font-size:11px; line-height:16px; font-weight:700; letter-spacing:1.6px; color:#6B9DC0; text-transform:uppercase;">CWS Pulse Awards</div></td><td align="right"><span style="display:inline-block; border:1px solid #F5A623; border-radius:18px; padding:7px 14px; color:#F5A623; font-size:11px; line-height:14px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase;">Golden Ticket</span></td></tr></table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="background:#0D3060; padding:42px 36px 38px;">
+              <div style="font-size:50px; line-height:52px; margin-bottom:12px;">&#127915;</div>
+              <h1 style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:40px; line-height:44px; font-weight:700; color:#F5A623;">Golden Ticket Recognition</h1>
+              <p style="margin:14px auto 0; max-width:470px; font-size:15px; line-height:24px; color:#BDD3E8; font-style:italic;">A premium recognition for a story that deserves to be seen, shared, and celebrated.</p>
+              {% if occasion_label %}<div style="display:inline-block; margin-top:18px; border:1px solid #F5A623; border-radius:18px; padding:7px 16px; color:#F5A623; font-size:12px; line-height:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">{{ occasion_label }}</div>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:34px 36px 30px; background:#FFFFFF;">
+              <p style="margin:0 0 24px; font-size:15px; line-height:26px; color:#2D3748;">Congratulations to <strong style="color:#0A2240;">{{ winner_first_name }} {{ winner_last_name }}</strong>, selected for the <strong style="color:#F5A623;">CWS Golden Ticket</strong>.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #F5A623; border-radius:10px; overflow:hidden; border-collapse:separate; border-spacing:0;">
+                <tr><td style="background:#F5A623; padding:12px 20px; color:#0A2240; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;">{{ award_type_label }} &nbsp;|&nbsp; {{ subcategory }}</td></tr>
+                <tr>
+                  <td style="background:#FFF9EF; padding:24px 24px 22px;">
+                    <h2 style="margin:0 0 4px; font-family:Georgia, 'Times New Roman', serif; font-size:30px; line-height:34px; font-weight:700; color:#0A2240;">{{ winner_first_name }} {{ winner_last_name }}</h2>
+                    <p style="margin:0 0 18px; font-size:13px; line-height:20px; color:#6B8099;">{{ winner_job_title }} &mdash; {{ winner_department }}</p>
+                    <p style="margin:0 0 18px; font-size:12px; line-height:18px; color:#0A2240;"><strong>Pillar:</strong> {{ charter_pillar }} &nbsp;|&nbsp; <strong>Value:</strong> {{ company_value }}</p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF; border-left:4px solid #F5A623;"><tr><td style="padding:18px 20px;"><div style="font-family:Georgia, 'Times New Roman', serif; font-size:42px; line-height:28px; color:#E8870A;">&ldquo;</div><p style="margin:0; font-size:15px; line-height:26px; font-style:italic; color:#2D3748;">{{ story }}</p></td></tr></table>
+                    <p style="margin:18px 0 0; padding-top:14px; border-top:1px solid #F2D7A7; font-size:12px; line-height:18px; color:#6B8099;">Nominated by <strong style="color:#0A2240;">{{ nominated_by }}</strong> &nbsp;|&nbsp; {{ award_month }}</p>
+                  </td>
+                </tr>
+              </table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px; background:#0A2240; border-radius:10px;"><tr><td style="padding:24px 26px;"><div style="font-family:Georgia, 'Times New Roman', serif; font-size:26px; line-height:26px; color:#F5A623;">&ldquo;</div><p style="margin:0; font-size:15px; line-height:26px; color:#FFFFFF;">{{ ceo_message }}</p><p style="margin:18px 0 0; font-size:13px; line-height:20px; color:#BDD3E8;"><strong style="color:#F5A623;">{{ ceo_name }}</strong><br>{{ ceo_title }}</p></td></tr></table>
+              <p style="margin:24px 0 0; font-size:12px; line-height:20px; color:#6B8099;">With recognition from {{ ccco_name }}, {{ ccco_title }}{% if chief_pc_name %}, and {{ chief_pc_name }}, {{ chief_pc_title }}{% endif %}.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px;"><tr><td align="center"><a href="{{ hall_of_fame_url }}" style="display:inline-block; background:#F5A623; color:#0A2240; text-decoration:none; padding:12px 24px; border-radius:8px; font-size:13px; line-height:16px; font-weight:700; letter-spacing:.4px;">Open Hall of Fame</a></td></tr></table>
+            </td>
+          </tr>
+          <tr><td align="center" style="background:#0A2240; padding:18px 30px; color:#F5A623; font-size:11px; line-height:18px; letter-spacing:1px; text-transform:uppercase; font-weight:700;">Living the Charter. Leading the Techco.</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

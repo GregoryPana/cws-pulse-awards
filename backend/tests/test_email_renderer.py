@@ -28,6 +28,9 @@ def test_render_email_renders_charter_champion_template() -> None:
     assert "Esther" in html
     assert "Charter Champion" in html
     assert "Great collaboration story" in html
+    assert "A New" in html
+    assert "Open Hall of Fame" in html
+    assert "Living the Charter. Leading the Techco." in html
 
 
 def test_render_email_renders_instant_impact_template() -> None:
@@ -54,6 +57,8 @@ def test_render_email_renders_instant_impact_template() -> None:
     assert "Vania" in html
     assert "Malbrook" in html
     assert "Instant Impact" in html
+    assert "Recognising action that moved the needle" in html
+    assert "Open Hall of Fame" in html
 
 
 def test_render_email_renders_golden_ticket_template() -> None:
@@ -89,6 +94,8 @@ def test_render_email_renders_golden_ticket_template() -> None:
     assert "Labonte" in html
     assert "Thank you for your dedication" in html
     assert "Naadir Hassan" in html
+    assert "Golden Ticket Recognition" in html
+    assert "A premium recognition" in html
 
 
 def test_render_email_handles_missing_optional_fields() -> None:
