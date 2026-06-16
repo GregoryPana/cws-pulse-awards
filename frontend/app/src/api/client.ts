@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 
 export class ApiError extends Error {
   constructor(
@@ -27,7 +27,7 @@ export function buildQuery(params: Record<string, string | number | undefined>):
 }
 
 export async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`)
+  const res = await fetch(`${API_BASE_URL}${path}`)
   return handleResponse<T>(res)
 }
 
@@ -36,6 +36,6 @@ export async function getWithParams<T>(
   params: Record<string, string | number | undefined>,
 ): Promise<T> {
   const query = buildQuery(params)
-  const res = await fetch(`${BASE_URL}${path}${query}`)
+  const res = await fetch(`${API_BASE_URL}${path}${query}`)
   return handleResponse<T>(res)
 }
