@@ -39,6 +39,20 @@ export interface EmailSendResponse {
   subject: string
 }
 
+export interface EmailRecipient {
+  id: number
+  email: string
+  name: string | null
+  active: boolean
+  created_by: string | null
+}
+
+export interface EmailRecipientCreatePayload {
+  email: string
+  name?: string | null
+  active?: boolean
+}
+
 async function handle<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = await response.text().catch(() => '')
@@ -92,4 +106,51 @@ export async function sendAwardEmail(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   return handle<EmailSendResponse>(response)
+}
+
+export async function fetchEmailRecipients(accessToken: string): Promise<EmailRecipient[]> {
+  const response = await fetch(`${API_BASE_URL}/admin/config/recipients`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handle<EmailRecipient[]>(response)
+}
+
+export async function createEmailRecipient(
+  payload: EmailRecipientCreatePayload,
+  accessToken: string,
+): Promise<EmailRecipient> {
+  const response = await fetch(`${API_BASE_URL}/admin/config/recipients`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  return handle<EmailRecipient>(response)
+}
+
+export async function toggleEmailRecipient(
+  recipientId: number,
+  accessToken: string,
+): Promise<EmailRecipient> {
+  const response = await fetch(`${API_BASE_URL}/admin/config/recipients/${recipientId}/toggle`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handle<EmailRecipient>(response)
+}
+
+export async function deleteEmailRecipient(
+  recipientId: number,
+  accessToken: string,
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/admin/config/recipients/${recipientId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text().catch(() => '')
+    throw new Error(body || response.statusText)
+  }
 }

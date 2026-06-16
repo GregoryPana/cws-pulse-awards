@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createWinner, fetchAdminWinners, fetchAwardEmailPreview, sendAwardEmail, type EmailPreviewResponse, type WinnerAdmin, type WinnerCreatePayload } from '../../api/admin'
+import { createEmailRecipient, createWinner, deleteEmailRecipient, fetchAdminWinners, fetchAwardEmailPreview, fetchEmailRecipients, sendAwardEmail, toggleEmailRecipient, type EmailPreviewResponse, type EmailRecipient, type WinnerAdmin, type WinnerCreatePayload } from '../../api/admin'
 import { fetchPillars, fetchSubcategories, fetchValues, type CompanyValue, type Pillar, type Subcategory } from '../../api/config'
 import AnimatedBackground from '../../components/shared/AnimatedBackground'
 import { useAuth } from '../../hooks/useAuth'
@@ -68,12 +68,16 @@ export default function AdminEntry() {
   const [values, setValues] = useState<CompanyValue[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [recentWinners, setRecentWinners] = useState<WinnerAdmin[]>([])
+  const [recipients, setRecipients] = useState<EmailRecipient[]>([])
+  const [recipientEmail, setRecipientEmail] = useState('')
+  const [recipientName, setRecipientName] = useState('')
   const [preview, setPreview] = useState<EmailPreviewResponse | null>(null)
   const [savedWinner, setSavedWinner] = useState<WinnerAdmin | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [isRecipientBusy, setIsRecipientBusy] = useState(false)
 
   useEffect(() => {
     void Promise.all([
@@ -96,8 +100,14 @@ export default function AdminEntry() {
   useEffect(() => {
     if (!isSignedIn) return
     void getAccessToken()
-      .then((token) => fetchAdminWinners(token, { year: payload.award_year }))
-      .then((data) => setRecentWinners(data.winners.slice(0, 5)))
+      .then(async (token) => {
+        const [winnerData, recipientData] = await Promise.all([
+          fetchAdminWinners(token, { year: payload.award_year }),
+          fetchEmailRecipients(token),
+        ])
+        setRecentWinners(winnerData.winners.slice(0, 5))
+        setRecipients(recipientData)
+      })
       .catch(() => undefined)
   }, [getAccessToken, isSignedIn, payload.award_year])
 
@@ -147,6 +157,71 @@ export default function AdminEntry() {
       setError(message)
     } finally {
       setIsSending(false)
+    }
+  }
+
+  const refreshRecipients = async () => {
+    const token = await getAccessToken()
+    const recipientData = await fetchEmailRecipients(token)
+    setRecipients(recipientData)
+  }
+
+  const handleAddRecipient = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError(null)
+    setStatusMessage(null)
+    setIsRecipientBusy(true)
+
+    try {
+      const token = await getAccessToken()
+      await createEmailRecipient(
+        { email: recipientEmail, name: recipientName || null, active: true },
+        token,
+      )
+      setRecipientEmail('')
+      setRecipientName('')
+      await refreshRecipients()
+      setStatusMessage('Recipient added.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add recipient'
+      setError(message)
+    } finally {
+      setIsRecipientBusy(false)
+    }
+  }
+
+  const handleToggleRecipient = async (recipientId: number) => {
+    setError(null)
+    setStatusMessage(null)
+    setIsRecipientBusy(true)
+
+    try {
+      const token = await getAccessToken()
+      await toggleEmailRecipient(recipientId, token)
+      await refreshRecipients()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to toggle recipient'
+      setError(message)
+    } finally {
+      setIsRecipientBusy(false)
+    }
+  }
+
+  const handleDeleteRecipient = async (recipientId: number) => {
+    setError(null)
+    setStatusMessage(null)
+    setIsRecipientBusy(true)
+
+    try {
+      const token = await getAccessToken()
+      await deleteEmailRecipient(recipientId, token)
+      await refreshRecipients()
+      setStatusMessage('Recipient deleted.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete recipient'
+      setError(message)
+    } finally {
+      setIsRecipientBusy(false)
     }
   }
 
@@ -284,6 +359,71 @@ export default function AdminEntry() {
           </form>
 
           <aside className="space-y-6">
+            <section className="rounded-card border border-white/10 bg-white/6 p-5">
+              <h2 className="font-display text-2xl font-bold text-white">Email Recipients</h2>
+              <p className="mt-1 text-sm text-white/45">
+                Active recipients receive award emails when you press send.
+              </p>
+
+              <form onSubmit={handleAddRecipient} className="mt-4 grid gap-3">
+                <input
+                  value={recipientEmail}
+                  onChange={(event) => setRecipientEmail(event.target.value)}
+                  required
+                  type="email"
+                  placeholder="pc-team@cwseychelles.com"
+                  className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-gold focus:ring-4 focus:ring-gold/15"
+                />
+                <input
+                  value={recipientName}
+                  onChange={(event) => setRecipientName(event.target.value)}
+                  placeholder="Display name (optional)"
+                  className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-gold focus:ring-4 focus:ring-gold/15"
+                />
+                <button
+                  disabled={!isSignedIn || isRecipientBusy}
+                  className="rounded-btn border border-gold/30 bg-gold/15 px-4 py-2 font-label text-xs font-bold uppercase tracking-wide text-gold-soft disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isRecipientBusy ? 'Working...' : 'Add Recipient'}
+                </button>
+              </form>
+
+              <div className="mt-4 space-y-2">
+                {recipients.length === 0 && <p className="text-sm text-white/35">No recipients configured.</p>}
+                {recipients.map((recipient) => (
+                  <div key={recipient.id} className="rounded-btn border border-white/10 bg-white/6 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{recipient.email}</p>
+                        <p className="text-xs text-white/40">{recipient.name || 'No display name'}</p>
+                      </div>
+                      <span className={`rounded-badge px-2 py-1 font-label text-[10px] font-bold uppercase tracking-wide ${recipient.active ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-white/35'}`}>
+                        {recipient.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleToggleRecipient(recipient.id)}
+                        disabled={isRecipientBusy}
+                        className="rounded-btn border border-white/12 bg-white/7 px-3 py-1.5 font-label text-[11px] font-semibold uppercase tracking-wide text-white/60 hover:text-white disabled:opacity-50"
+                      >
+                        Toggle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteRecipient(recipient.id)}
+                        disabled={isRecipientBusy}
+                        className="rounded-btn border border-red-400/25 bg-red-400/10 px-3 py-1.5 font-label text-[11px] font-semibold uppercase tracking-wide text-red-200 disabled:opacity-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
             <section className="rounded-card border border-gold/20 bg-gold/8 p-5">
               <h2 className="font-display text-3xl font-bold text-white">Email Preview</h2>
               {savedWinner && <p className="mt-1 text-sm text-white/45">Saved record #{savedWinner.id}: {savedWinner.first_name} {savedWinner.last_name}</p>}
