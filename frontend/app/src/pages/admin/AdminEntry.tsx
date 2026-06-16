@@ -31,6 +31,8 @@ const emptyPayload = (): WinnerCreatePayload => {
 }
 
 const years = Array.from({ length: Math.max(new Date().getFullYear(), 2026) - 2026 + 1 }, (_, index) => Math.max(new Date().getFullYear(), 2026) - index)
+const awardPeriods = years.flatMap((year) => MONTHS_SHORT.map((month) => `${month} ${year}`))
+const controlClass = 'rounded-btn border border-white/12 bg-[#0B1C30] px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/35 [color-scheme:dark] focus:border-gold focus:ring-4 focus:ring-gold/15'
 
 function TextField({
   label,
@@ -55,7 +57,7 @@ function TextField({
         onChange={(event) => onChange(event.target.value)}
         required={required}
         placeholder={placeholder}
-        className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-gold focus:ring-4 focus:ring-gold/15"
+        className={controlClass}
       />
     </label>
   )
@@ -225,8 +227,6 @@ export default function AdminEntry() {
     }
   }
 
-  const months = MONTHS_SHORT.map((month) => `${month} ${payload.award_year}`)
-
   return (
     <div className="relative min-h-screen bg-deep text-white">
       <AnimatedBackground variant="gold" />
@@ -281,7 +281,7 @@ export default function AdminEntry() {
                 <select
                   value={payload.award_type}
                   onChange={(event) => updatePayload('award_type', event.target.value as WinnerCreatePayload['award_type'])}
-                  className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none focus:border-gold focus:ring-4 focus:ring-gold/15"
+                  className={controlClass}
                 >
                   <option className="bg-navy" value="CHARTER_CHAMPION">Charter Champion</option>
                   <option className="bg-navy" value="INSTANT_IMPACT">Instant Impact</option>
@@ -289,17 +289,18 @@ export default function AdminEntry() {
               </label>
 
               <label className="flex flex-col gap-1.5">
-                <span className="font-label text-[11px] font-semibold uppercase tracking-wider text-white/60">Award year *</span>
+                <span className="font-label text-[11px] font-semibold uppercase tracking-wider text-white/60">Award period *</span>
                 <select
-                  value={payload.award_year}
+                  value={payload.award_month}
                   onChange={(event) => {
-                    const year = Number(event.target.value)
+                    const period = event.target.value
+                    const year = Number(period.slice(-4))
                     updatePayload('award_year', year)
-                    updatePayload('award_month', `${payload.award_month.slice(0, 3)} ${year}`)
+                    updatePayload('award_month', period)
                   }}
-                  className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none focus:border-gold focus:ring-4 focus:ring-gold/15"
+                  className={controlClass}
                 >
-                  {years.map((year) => <option className="bg-navy" key={year} value={year}>{year}</option>)}
+                  {awardPeriods.map((period) => <option className="bg-navy" key={period} value={period}>{period}</option>)}
                 </select>
               </label>
 
@@ -310,28 +311,21 @@ export default function AdminEntry() {
 
               <label className="flex flex-col gap-1.5">
                 <span className="font-label text-[11px] font-semibold uppercase tracking-wider text-white/60">Subcategory *</span>
-                <select required value={payload.subcategory} onChange={(event) => updatePayload('subcategory', event.target.value)} className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none focus:border-gold focus:ring-4 focus:ring-gold/15">
+                <select required value={payload.subcategory} onChange={(event) => updatePayload('subcategory', event.target.value)} className={controlClass}>
                   {subcategories.map((item) => <option className="bg-navy" key={item.id} value={item.name}>{item.name}</option>)}
                 </select>
               </label>
 
               <label className="flex flex-col gap-1.5">
-                <span className="font-label text-[11px] font-semibold uppercase tracking-wider text-white/60">Month *</span>
-                <select required value={payload.award_month} onChange={(event) => updatePayload('award_month', event.target.value)} className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none focus:border-gold focus:ring-4 focus:ring-gold/15">
-                  {months.map((month) => <option className="bg-navy" key={month} value={month}>{month}</option>)}
-                </select>
-              </label>
-
-              <label className="flex flex-col gap-1.5">
                 <span className="font-label text-[11px] font-semibold uppercase tracking-wider text-white/60">Charter pillar *</span>
-                <select required value={payload.charter_pillar} onChange={(event) => updatePayload('charter_pillar', event.target.value)} className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none focus:border-gold focus:ring-4 focus:ring-gold/15">
+                <select required value={payload.charter_pillar} onChange={(event) => updatePayload('charter_pillar', event.target.value)} className={controlClass}>
                   {pillars.map((item) => <option className="bg-navy" key={item.id} value={item.name}>{item.name}</option>)}
                 </select>
               </label>
 
               <label className="flex flex-col gap-1.5">
                 <span className="font-label text-[11px] font-semibold uppercase tracking-wider text-white/60">Company value *</span>
-                <select required value={payload.company_value} onChange={(event) => updatePayload('company_value', event.target.value)} className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none focus:border-gold focus:ring-4 focus:ring-gold/15">
+                <select required value={payload.company_value} onChange={(event) => updatePayload('company_value', event.target.value)} className={controlClass}>
                   {values.map((item) => <option className="bg-navy" key={item.id} value={item.name}>{item.name}</option>)}
                 </select>
               </label>
@@ -346,7 +340,7 @@ export default function AdminEntry() {
                 onChange={(event) => updatePayload('story', event.target.value)}
                 required
                 rows={8}
-                className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm leading-relaxed text-white outline-none transition placeholder:text-white/25 focus:border-gold focus:ring-4 focus:ring-gold/15"
+                className={`${controlClass} leading-relaxed`}
                 placeholder="Write the recognition story exactly as it should appear in the email preview."
               />
             </label>
@@ -378,13 +372,13 @@ export default function AdminEntry() {
                   required
                   type="email"
                   placeholder="pc-team@cwseychelles.com"
-                  className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-gold focus:ring-4 focus:ring-gold/15"
+                  className={controlClass}
                 />
                 <input
                   value={recipientName}
                   onChange={(event) => setRecipientName(event.target.value)}
                   placeholder="Display name (optional)"
-                  className="rounded-btn border border-white/12 bg-white/7 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-gold focus:ring-4 focus:ring-gold/15"
+                  className={controlClass}
                 />
                 <button
                   disabled={!isSignedIn || isRecipientBusy}
