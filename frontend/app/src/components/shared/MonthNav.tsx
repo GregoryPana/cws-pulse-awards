@@ -42,32 +42,34 @@ export default function MonthNav({ activeMonth, onChange, variant, year }: Props
   return (
     <nav
       ref={navRef}
-      className="flex items-center gap-2 px-8 pb-12 overflow-x-auto scrollbar-none snap-x snap-mandatory"
+      className="w-full overflow-x-auto px-8 pb-12 scrollbar-none snap-x snap-mandatory"
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
     >
-      {MONTHS.map((m) => {
-        const label = monthLabel(m, year)
-        const isActive = activeMonth === label || (m === 'All' && activeMonth === 'All')
-        return (
-          <button
-            key={m}
-            onClick={() => onChange(label)}
-            className={`
-              snap-start shrink-0 font-label text-xs font-semibold tracking-wide
-              px-4 py-[7px] rounded-badge border
-              transition-all duration-200 cursor-pointer
-              ${
-                isActive
-                  ? activeClass
-                  : 'bg-mist border-white/12 text-white/50 hover:border-white/30 hover:text-white'
-              }
-            `}
-            aria-pressed={isActive}
-          >
-            {m}
-          </button>
-        )
-      })}
+      <div className="mx-auto flex w-max items-center justify-center gap-2">
+        {MONTHS.map((m) => {
+          const label = monthLabel(m, year)
+          const isActive = activeMonth === label || (m === 'All' && activeMonth === 'All')
+          return (
+            <button
+              key={m}
+              onClick={() => onChange(label)}
+              className={`
+                snap-start shrink-0 font-label text-xs font-semibold tracking-wide
+                px-4 py-[7px] rounded-badge border
+                transition-all duration-200 cursor-pointer
+                ${
+                  isActive
+                    ? activeClass
+                    : 'bg-mist border-white/12 text-white/50 hover:border-white/30 hover:text-white'
+                }
+              `}
+              aria-pressed={isActive}
+            >
+              {m}
+            </button>
+          )
+        })}
+      </div>
     </nav>
   )
 }
