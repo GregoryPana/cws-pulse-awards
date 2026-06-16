@@ -33,6 +33,12 @@ export interface EmailPreviewResponse {
   subject: string
 }
 
+export interface EmailSendResponse {
+  email_sent: boolean
+  recipients: string[]
+  subject: string
+}
+
 async function handle<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = await response.text().catch(() => '')
@@ -75,4 +81,15 @@ export async function fetchAwardEmailPreview(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   return handle<EmailPreviewResponse>(response)
+}
+
+export async function sendAwardEmail(
+  winnerId: number,
+  accessToken: string,
+): Promise<EmailSendResponse> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/email-send`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handle<EmailSendResponse>(response)
 }

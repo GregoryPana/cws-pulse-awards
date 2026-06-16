@@ -8,3 +8,11 @@ class EmailPreviewResponse(BaseModel):
 
     html: str
     subject: str
+
+
+class EmailSendResponse(BaseModel):
+    """Result of an award notification email send attempt."""
+
+    email_sent: bool
+    recipients: list[str]
+    subject: str

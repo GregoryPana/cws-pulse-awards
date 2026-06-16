@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createWinner, fetchAdminWinners, fetchAwardEmailPreview, type EmailPreviewResponse, type WinnerAdmin, type WinnerCreatePayload } from '../../api/admin'
+import { createWinner, fetchAdminWinners, fetchAwardEmailPreview, sendAwardEmail, type EmailPreviewResponse, type WinnerAdmin, type WinnerCreatePayload } from '../../api/admin'
 import { fetchPillars, fetchSubcategories, fetchValues, type CompanyValue, type Pillar, type Subcategory } from '../../api/config'
 import AnimatedBackground from '../../components/shared/AnimatedBackground'
 import { useAuth } from '../../hooks/useAuth'
@@ -73,6 +73,7 @@ export default function AdminEntry() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
     void Promise.all([
@@ -126,6 +127,26 @@ export default function AdminEntry() {
       setError(message)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleSendEmail = async () => {
+    if (!savedWinner) return
+    setError(null)
+    setStatusMessage(null)
+    setIsSending(true)
+
+    try {
+      const token = await getAccessToken()
+      const result = await sendAwardEmail(savedWinner.id, token)
+      setStatusMessage(
+        `Email sent to ${result.recipients.length} recipient${result.recipients.length === 1 ? '' : 's'}.`,
+      )
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send email'
+      setError(message)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -267,10 +288,20 @@ export default function AdminEntry() {
               <h2 className="font-display text-3xl font-bold text-white">Email Preview</h2>
               {savedWinner && <p className="mt-1 text-sm text-white/45">Saved record #{savedWinner.id}: {savedWinner.first_name} {savedWinner.last_name}</p>}
               {preview ? (
-                <div className="mt-4 overflow-hidden rounded-btn border border-white/12 bg-white">
-                  <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900">{preview.subject}</div>
-                  <iframe title="Award email preview" srcDoc={preview.html} className="h-[420px] w-full bg-white" />
-                </div>
+                <>
+                  <div className="mt-4 overflow-hidden rounded-btn border border-white/12 bg-white">
+                    <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900">{preview.subject}</div>
+                    <iframe title="Award email preview" srcDoc={preview.html} className="h-[420px] w-full bg-white" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSendEmail}
+                    disabled={!savedWinner || isSending}
+                    className="mt-4 w-full rounded-btn bg-gradient-to-r from-amber to-gold px-5 py-3 font-label text-sm font-bold uppercase tracking-wide text-navy shadow-lg shadow-gold/25 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSending ? 'Sending...' : 'Send Email To Active Recipients'}
+                  </button>
+                </>
               ) : (
                 <p className="mt-4 text-sm leading-relaxed text-white/45">Save a winner to render the award email preview from the database record.</p>
               )}

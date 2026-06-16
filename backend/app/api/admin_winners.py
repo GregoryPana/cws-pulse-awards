@@ -8,10 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.dependencies import require_admin_claims
-from app.models import ConfigSetting, Winner
-from app.schemas.email import EmailPreviewResponse
+from app.models import ConfigSetting, EmailRecipient, Winner
+from app.schemas.email import EmailPreviewResponse, EmailSendResponse
 from app.schemas.winner import WinnerAdmin, WinnerAdminListResponse, WinnerCreate
 from app.services.email_renderer import render_email
+from app.services.email_service import send_templated_email
 
 router = APIRouter(prefix="/api/v1", tags=["admin-winners"])
 
@@ -57,6 +58,15 @@ async def _public_settings(db: AsyncSession) -> dict[str, str | None]:
     return {row.key: row.value for row in result.scalars().all()}
 
 
+async def _active_recipient_emails(db: AsyncSession) -> list[str]:
+    """Return all active configured recipient email addresses."""
+
+    result = await db.execute(
+        select(EmailRecipient).where(EmailRecipient.active.is_(True))
+    )
+    return [row.email for row in result.scalars().all()]
+
+
 def _award_email_context(winner: Winner, settings: dict[str, str | None]) -> dict[str, Any]:
     """Build the template context for standard award notification emails."""
 
@@ -75,6 +85,15 @@ def _award_email_context(winner: Winner, settings: dict[str, str | None]) -> dic
         "hall_of_fame_url": settings.get("hall_of_fame_url", ""),
         "photo_url": winner.photo_url,
     }
+
+
+def _award_email_subject(winner: Winner) -> str:
+    """Return the standard award notification email subject."""
+
+    return (
+        f"CWS Pulse Awards — New {_award_type_label(winner.award_type)}: "
+        f"{winner.first_name} {winner.last_name}"
+    )
 
 
 @router.get("/admin/winners", response_model=WinnerAdminListResponse)
@@ -172,8 +191,41 @@ async def preview_award_email(
     settings = await _public_settings(db)
     context = _award_email_context(winner, settings)
     html = render_email(_award_template_name(winner.award_type), context)
-    subject = (
-        f"CWS Pulse Awards — New {_award_type_label(winner.award_type)}: "
-        f"{winner.first_name} {winner.last_name}"
-    )
-    return EmailPreviewResponse(html=html, subject=subject)
+    return EmailPreviewResponse(html=html, subject=_award_email_subject(winner))
+
+
+@router.post("/admin/winners/{winner_id}/email-send", response_model=EmailSendResponse)
+async def send_award_email(
+    winner_id: int,
+    claims: dict[str, Any] = Depends(require_admin_claims),
+    db: AsyncSession = Depends(get_db_session),
+) -> EmailSendResponse:
+    """Send the standard award notification email for a saved winner."""
+
+    del claims
+    result = await db.execute(select(Winner).where(Winner.id == winner_id))
+    winner = result.scalar_one_or_none()
+    if winner is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Winner not found")
+
+    recipients = await _active_recipient_emails(db)
+    if not recipients:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active email recipients configured",
+        )
+
+    settings = await _public_settings(db)
+    context = _award_email_context(winner, settings)
+    template_name = _award_template_name(winner.award_type)
+    subject = _award_email_subject(winner)
+
+    try:
+        await send_templated_email(template_name, context, recipients)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Award email send failed",
+        ) from exc
+
+    return EmailSendResponse(email_sent=True, recipients=recipients, subject=subject)
