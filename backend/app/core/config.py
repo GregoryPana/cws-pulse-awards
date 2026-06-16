@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     app_env: str = Field(default="local", alias="APP_ENV")
     app_secret_key: str = Field(default="local-development-only", alias="APP_SECRET_KEY")
     app_version: str = Field(default="0.1.0", alias="APP_VERSION")
+    dev_auth_enabled: bool = Field(default=False, alias="DEV_AUTH_ENABLED")
 
     database_url: str = Field(default="", alias="DATABASE_URL")
     db_host: str = Field(default="127.0.0.1", alias="DB_HOST")

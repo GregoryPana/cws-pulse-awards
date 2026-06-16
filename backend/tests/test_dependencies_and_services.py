@@ -47,6 +47,52 @@ async def test_require_admin_claims_returns_claims(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
+async def test_require_admin_claims_allows_explicit_local_dev_token(monkeypatch) -> None:
+    """Local dev auth should accept the fixed token only when explicitly enabled."""
+
+    credentials = HTTPAuthorizationCredentials(
+        scheme="Bearer",
+        credentials="local-dev-admin",
+    )
+
+    monkeypatch.setattr(
+        dependencies,
+        "get_settings",
+        lambda: Settings(DEV_AUTH_ENABLED=True, ADMIN_ROLE="CWS-Pulse-Admin"),
+    )
+
+    claims = await dependencies.require_admin_claims(credentials)
+
+    assert claims["sub"] == "local-dev-admin"
+    assert claims["roles"] == ["CWS-Pulse-Admin"]
+
+
+@pytest.mark.asyncio
+async def test_require_admin_claims_rejects_dev_token_when_disabled(monkeypatch) -> None:
+    """Local dev token must not bypass JWT validation unless enabled."""
+
+    credentials = HTTPAuthorizationCredentials(
+        scheme="Bearer",
+        credentials="local-dev-admin",
+    )
+
+    async def fake_validate_jwt(token: str) -> dict[str, Any]:
+        raise HTTPException(status_code=401, detail=f"invalid {token}")
+
+    monkeypatch.setattr(
+        dependencies,
+        "get_settings",
+        lambda: Settings(DEV_AUTH_ENABLED=False),
+    )
+    monkeypatch.setattr(dependencies, "validate_jwt", fake_validate_jwt)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await dependencies.require_admin_claims(credentials)
+
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_send_templated_email_uses_smtp_relay(monkeypatch) -> None:
     """Email service should render HTML and send it through the SMTP relay."""
 

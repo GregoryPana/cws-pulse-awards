@@ -22,3 +22,7 @@ export function isMsalConfigured(): boolean {
       import.meta.env.VITE_ENTRA_API_SCOPE,
   )
 }
+
+export function isDevAuthEnabled(): boolean {
+  return import.meta.env.VITE_DEV_AUTH_ENABLED === 'true'
+}

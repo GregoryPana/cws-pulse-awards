@@ -62,7 +62,7 @@ function TextField({
 }
 
 export default function AdminEntry() {
-  const { isSignedIn, signIn, getAccessToken, account } = useAuth()
+  const { isSignedIn, isDevAuthEnabled, signIn, getAccessToken, account } = useAuth()
   const [payload, setPayload] = useState<WinnerCreatePayload>(emptyPayload)
   const [pillars, setPillars] = useState<Pillar[]>([])
   const [values, setValues] = useState<CompanyValue[]>([])
@@ -255,9 +255,15 @@ export default function AdminEntry() {
           </div>
         </header>
 
-        {!isMsalConfigured() && (
+        {!isMsalConfigured() && !isDevAuthEnabled && (
           <div className="mb-6 rounded-card border border-amber/30 bg-amber/10 p-4 text-sm text-gold-soft">
             Entra frontend variables are not configured yet. Set VITE_ENTRA_CLIENT_ID, VITE_ENTRA_AUTHORITY, VITE_ENTRA_API_SCOPE, and VITE_APP_URL to use the admin MVP.
+          </div>
+        )}
+
+        {isDevAuthEnabled && (
+          <div className="mb-6 rounded-card border border-sky/30 bg-sky/10 p-4 text-sm text-sky">
+            Local dev auth is enabled. Admin API calls use the fixed test token and bypass MSAL only for this build.
           </div>
         )}
 

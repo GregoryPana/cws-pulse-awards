@@ -1,17 +1,23 @@
 import { useCallback } from 'react'
 import { InteractionRequiredAuthError } from '@azure/msal-browser'
 import { useMsal } from '@azure/msal-react'
-import { loginRequest } from '../msalConfig'
+import { isDevAuthEnabled, loginRequest } from '../msalConfig'
+
+const DEV_ACCESS_TOKEN = 'local-dev-admin'
 
 export function useAuth() {
   const { instance, accounts } = useMsal()
   const account = accounts[0]
+  const devAuthEnabled = isDevAuthEnabled()
 
   const signIn = useCallback(() => {
+    if (devAuthEnabled) return
     void instance.loginRedirect(loginRequest)
-  }, [instance])
+  }, [devAuthEnabled, instance])
 
   const getAccessToken = useCallback(async () => {
+    if (devAuthEnabled) return DEV_ACCESS_TOKEN
+
     if (!account) {
       await instance.loginRedirect(loginRequest)
       throw new Error('Redirecting to sign in')
@@ -27,11 +33,12 @@ export function useAuth() {
       }
       throw error
     }
-  }, [account, instance])
+  }, [account, devAuthEnabled, instance])
 
   return {
     account,
-    isSignedIn: Boolean(account),
+    isSignedIn: devAuthEnabled || Boolean(account),
+    isDevAuthEnabled: devAuthEnabled,
     signIn,
     getAccessToken,
   }
