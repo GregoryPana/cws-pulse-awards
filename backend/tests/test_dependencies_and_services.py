@@ -47,13 +47,85 @@ async def test_require_admin_claims_returns_claims(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_send_templated_email_logs_request(caplog) -> None:
-    """Email stub should log the requested template and recipients."""
+async def test_send_templated_email_uses_smtp_relay(monkeypatch) -> None:
+    """Email service should render HTML and send it through the SMTP relay."""
 
-    with caplog.at_level("INFO"):
-        await email_service.send_templated_email("golden_ticket.html", {"winner": "A"}, ["pc@example.com"])
+    sent: dict[str, Any] = {}
 
-    assert "Email stub invoked" in caplog.text
+    class FakeSMTP:
+        """SMTP stub that records calls."""
+
+        def __init__(self, host: str, port: int, timeout: float) -> None:
+            sent["host"] = host
+            sent["port"] = port
+            sent["timeout"] = timeout
+
+        def __enter__(self) -> "FakeSMTP":
+            return self
+
+        def __exit__(self, exc_type, exc, tb) -> None:
+            pass
+
+        def ehlo(self) -> None:
+            sent["ehlo_count"] = sent.get("ehlo_count", 0) + 1
+
+        def has_extn(self, extension: str) -> bool:
+            sent["extension"] = extension
+            return True
+
+        def starttls(self) -> None:
+            sent["starttls"] = True
+
+        def send_message(self, message) -> None:
+            sent["message"] = message
+
+    monkeypatch.setattr(
+        email_service,
+        "get_settings",
+        lambda: Settings(
+            SMTP_HOST="smtp.test.local",
+            SMTP_PORT=587,
+            SMTP_TIMEOUT_SECONDS=5,
+            SMTP_FROM="noreply@test.local",
+        ),
+    )
+    monkeypatch.setattr(email_service.smtplib, "SMTP", FakeSMTP)
+
+    await email_service.send_templated_email(
+        "award_charter_champion.html",
+        {
+            "winner_first_name": "Marie",
+            "winner_last_name": "Payet",
+            "winner_job_title": "Advisor",
+            "winner_department": "CX",
+            "award_type_label": "Charter Champion",
+            "subcategory": "Collaboration Catalyst",
+            "charter_pillar": "Accountability",
+            "company_value": "Customer",
+            "story": "Excellent support.",
+            "nominated_by": "A colleague",
+            "award_month": "Jun 2026",
+            "hall_of_fame_url": "https://pulse.cwsey.com",
+            "photo_url": None,
+        },
+        ["pc@example.com"],
+    )
+
+    assert sent["host"] == "smtp.test.local"
+    assert sent["starttls"] is True
+    assert sent["message"]["Subject"] == (
+        "CWS Pulse Awards — New Charter Champion: Marie Payet"
+    )
+    assert sent["message"]["From"] == "noreply@test.local"
+    assert sent["message"]["To"] == "pc@example.com"
+
+
+@pytest.mark.asyncio
+async def test_send_templated_email_requires_recipient() -> None:
+    """Email service should reject attempts without recipients."""
+
+    with pytest.raises(ValueError):
+        await email_service.send_templated_email("award_charter_champion.html", {}, [])
 
 
 @pytest.mark.asyncio
