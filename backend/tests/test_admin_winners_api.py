@@ -30,6 +30,7 @@ class FakeWinner:
     award_year = 2026
     golden_ticket = False
     golden_ticket_occasion = None
+    golden_ticket_ceo_message = None
     is_top_five = False
     top_five_rank = None
     top_five_year = None

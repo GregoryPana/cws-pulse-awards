@@ -19,6 +19,7 @@ export interface WinnerCreatePayload {
 }
 
 export interface WinnerAdmin extends WinnerPublic {
+  golden_ticket_ceo_message: string | null
   created_by: string
   updated_by: string | null
 }
@@ -51,6 +52,11 @@ export interface EmailRecipientCreatePayload {
   email: string
   name?: string | null
   active?: boolean
+}
+
+export interface GoldenTicketUpdatePayload {
+  occasion_label: string
+  ceo_message: string
 }
 
 async function handle<T>(response: Response): Promise<T> {
@@ -129,6 +135,43 @@ export async function sendAwardEmail(
   accessToken: string,
 ): Promise<EmailSendResponse> {
   const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/email-send`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handle<EmailSendResponse>(response)
+}
+
+export async function markGoldenTicket(
+  winnerId: number,
+  payload: GoldenTicketUpdatePayload,
+  accessToken: string,
+): Promise<WinnerAdmin> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/golden-ticket`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  return handle<WinnerAdmin>(response)
+}
+
+export async function fetchGoldenTicketEmailPreview(
+  winnerId: number,
+  accessToken: string,
+): Promise<EmailPreviewResponse> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/golden-ticket/email-preview`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handle<EmailPreviewResponse>(response)
+}
+
+export async function sendGoldenTicketEmail(
+  winnerId: number,
+  accessToken: string,
+): Promise<EmailSendResponse> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/golden-ticket/email-send`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
   })

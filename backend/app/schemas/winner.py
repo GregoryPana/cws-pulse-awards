@@ -58,8 +58,16 @@ class WinnerPublic(BaseModel):
 class WinnerAdmin(WinnerPublic):
     """Admin winner representation returned after create/list/detail operations."""
 
+    golden_ticket_ceo_message: str | None
     created_by: str
     updated_by: str | None
+
+
+class GoldenTicketUpdate(BaseModel):
+    """Admin payload for marking and personalising a Golden Ticket winner."""
+
+    occasion_label: str = Field(min_length=1, max_length=100)
+    ceo_message: str = Field(min_length=1)
 
 
 class WinnerListResponse(BaseModel):

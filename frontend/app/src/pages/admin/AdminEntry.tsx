@@ -1,6 +1,6 @@
 import { type CSSProperties, FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { archiveWinner, createEmailRecipient, createWinner, deleteEmailRecipient, fetchAdminWinners, fetchAwardEmailPreview, fetchEmailRecipients, sendAwardEmail, toggleEmailRecipient, updateWinner, type EmailPreviewResponse, type EmailRecipient, type WinnerAdmin, type WinnerCreatePayload } from '../../api/admin'
+import { archiveWinner, createEmailRecipient, createWinner, deleteEmailRecipient, fetchAdminWinners, fetchAwardEmailPreview, fetchEmailRecipients, fetchGoldenTicketEmailPreview, markGoldenTicket, sendAwardEmail, sendGoldenTicketEmail, toggleEmailRecipient, updateWinner, type EmailPreviewResponse, type EmailRecipient, type WinnerAdmin, type WinnerCreatePayload } from '../../api/admin'
 import { fetchPillars, fetchSubcategories, fetchValues, type CompanyValue, type Pillar, type Subcategory } from '../../api/config'
 import AnimatedBackground from '../../components/shared/AnimatedBackground'
 import CwsLogoMark from '../../components/shared/CwsLogoMark'
@@ -109,12 +109,16 @@ export default function AdminEntry() {
   const [recipientEmail, setRecipientEmail] = useState('')
   const [recipientName, setRecipientName] = useState('')
   const [preview, setPreview] = useState<EmailPreviewResponse | null>(null)
+  const [goldenPreview, setGoldenPreview] = useState<EmailPreviewResponse | null>(null)
   const [savedWinner, setSavedWinner] = useState<WinnerAdmin | null>(null)
   const [editingWinnerId, setEditingWinnerId] = useState<number | null>(null)
+  const [goldenOccasion, setGoldenOccasion] = useState('')
+  const [goldenCeoMessage, setGoldenCeoMessage] = useState('')
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [isGoldenBusy, setIsGoldenBusy] = useState(false)
   const [isRecipientBusy, setIsRecipientBusy] = useState(false)
 
   useEffect(() => {
@@ -170,6 +174,9 @@ export default function AdminEntry() {
 
       setSavedWinner(saved)
       setPreview(renderedPreview)
+      setGoldenPreview(null)
+      setGoldenOccasion(saved.golden_ticket_occasion || '')
+      setGoldenCeoMessage(saved.golden_ticket_ceo_message || '')
       setRecentWinners(latest.winners.slice(0, 5))
       setEditingWinnerId(saved.id)
       setStatusMessage(
@@ -189,9 +196,12 @@ export default function AdminEntry() {
     setError(null)
     setStatusMessage(null)
     setPreview(null)
+    setGoldenPreview(null)
     setSavedWinner(winner)
     setEditingWinnerId(winner.id)
     setPayload(payloadFromWinner(winner))
+    setGoldenOccasion(winner.golden_ticket_occasion || '')
+    setGoldenCeoMessage(winner.golden_ticket_ceo_message || '')
 
     try {
       const token = await getAccessToken()
@@ -218,11 +228,59 @@ export default function AdminEntry() {
         setSavedWinner(archived)
         setEditingWinnerId(archived.id)
         setPreview(null)
+        setGoldenPreview(null)
       }
       setStatusMessage(`Record #${winnerId} archived.`)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to archive winner'
       setError(message)
+    }
+  }
+
+  const handleMarkGoldenTicket = async () => {
+    if (!savedWinner) return
+    setError(null)
+    setStatusMessage(null)
+    setIsGoldenBusy(true)
+
+    try {
+      const token = await getAccessToken()
+      const updated = await markGoldenTicket(
+        savedWinner.id,
+        { occasion_label: goldenOccasion, ceo_message: goldenCeoMessage },
+        token,
+      )
+      const renderedPreview = await fetchGoldenTicketEmailPreview(updated.id, token)
+      const latest = await fetchAdminWinners(token, { year: payload.award_year })
+      setSavedWinner(updated)
+      setRecentWinners(latest.winners.slice(0, 5))
+      setGoldenPreview(renderedPreview)
+      setStatusMessage('Golden Ticket saved. Preview rendered from the personalised record.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save Golden Ticket'
+      setError(message)
+    } finally {
+      setIsGoldenBusy(false)
+    }
+  }
+
+  const handleSendGoldenTicket = async () => {
+    if (!savedWinner) return
+    setError(null)
+    setStatusMessage(null)
+    setIsGoldenBusy(true)
+
+    try {
+      const token = await getAccessToken()
+      const result = await sendGoldenTicketEmail(savedWinner.id, token)
+      setStatusMessage(
+        `Golden Ticket sent to ${result.recipients.length} recipient${result.recipients.length === 1 ? '' : 's'}.`,
+      )
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send Golden Ticket'
+      setError(message)
+    } finally {
+      setIsGoldenBusy(false)
     }
   }
 
@@ -480,7 +538,7 @@ export default function AdminEntry() {
               <button disabled={!isSignedIn || isSaving} className="rounded-btn bg-gradient-to-r from-amber to-gold px-5 py-3 font-label text-sm font-bold uppercase tracking-wide text-navy shadow-lg shadow-gold/25 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100">
                 {isSaving ? 'Saving...' : editingWinnerId ? 'Update & Preview Email' : 'Save & Preview Email'}
               </button>
-              <button type="button" onClick={() => { setPayload(emptyPayload()); setPreview(null); setSavedWinner(null); setEditingWinnerId(null); setStatusMessage(null); setError(null) }} className="rounded-btn border border-white/8 bg-white/5 px-5 py-3 font-label text-sm font-semibold uppercase tracking-wide text-white/60 transition hover:border-white/15 hover:text-white">
+              <button type="button" onClick={() => { setPayload(emptyPayload()); setPreview(null); setGoldenPreview(null); setSavedWinner(null); setEditingWinnerId(null); setGoldenOccasion(''); setGoldenCeoMessage(''); setStatusMessage(null); setError(null) }} className="rounded-btn border border-white/8 bg-white/5 px-5 py-3 font-label text-sm font-semibold uppercase tracking-wide text-white/60 transition hover:border-white/15 hover:text-white">
                 {editingWinnerId ? 'New Record' : 'Clear'}
               </button>
             </div>
@@ -588,6 +646,59 @@ export default function AdminEntry() {
                   <p className="font-display text-2xl font-bold text-white/70">Preview waiting</p>
                   <p className="mt-2 text-sm leading-relaxed text-white/45">Save a winner to render the award email preview from the database record.</p>
                 </div>
+              )}
+            </section>
+
+            <section className="rounded-card border border-gold/15 bg-[radial-gradient(circle_at_top_right,rgba(244,196,48,0.14),transparent_34%),rgba(244,196,48,0.06)] p-5 shadow-2xl shadow-black/25">
+              <p className="font-label text-[10px] font-bold uppercase tracking-[2.4px] text-gold">Golden Ticket</p>
+              <h2 className="mt-1 font-display text-2xl font-bold text-white">Personalise & Trigger</h2>
+              <p className="mt-1 text-sm leading-relaxed text-white/45">
+                Save or select a winner, then mark, personalise, preview, and send the Golden Ticket email.
+              </p>
+
+              <div className="mt-4 grid gap-3">
+                <input
+                  value={goldenOccasion}
+                  onChange={(event) => setGoldenOccasion(event.target.value)}
+                  placeholder="Occasion label, e.g. Q3 2026"
+                  className={controlClass}
+                />
+                <textarea
+                  value={goldenCeoMessage}
+                  onChange={(event) => setGoldenCeoMessage(event.target.value)}
+                  rows={5}
+                  placeholder="CEO closing paragraph for this Golden Ticket trigger."
+                  className={`${controlClass} leading-relaxed`}
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleMarkGoldenTicket()}
+                  disabled={!savedWinner || !goldenOccasion.trim() || !goldenCeoMessage.trim() || isGoldenBusy}
+                  className="rounded-btn border border-gold/25 bg-gold/15 px-4 py-2 font-label text-xs font-bold uppercase tracking-wide text-gold-soft transition hover:bg-gold/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isGoldenBusy ? 'Working...' : 'Save Golden Ticket & Preview'}
+                </button>
+              </div>
+
+              {goldenPreview ? (
+                <>
+                  <div className="mt-4 overflow-hidden rounded-card border border-white/8 bg-white shadow-xl shadow-black/20">
+                    <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900">{goldenPreview.subject}</div>
+                    <iframe title="Golden Ticket email preview" srcDoc={goldenPreview.html} className="h-[360px] w-full bg-white" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleSendGoldenTicket()}
+                    disabled={!savedWinner || isGoldenBusy}
+                    className="mt-4 w-full rounded-btn bg-gradient-to-r from-amber to-gold px-5 py-3 font-label text-sm font-bold uppercase tracking-wide text-navy shadow-lg shadow-gold/25 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    Send Golden Ticket To Active Recipients
+                  </button>
+                </>
+              ) : (
+                <p className="mt-4 rounded-card border border-dashed border-gold/15 bg-deep/30 p-4 text-sm leading-relaxed text-white/45">
+                  Golden Ticket preview appears after the personalised details are saved.
+                </p>
               )}
             </section>
 
