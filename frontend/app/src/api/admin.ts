@@ -111,7 +111,7 @@ export async function archiveWinner(
 
 export async function fetchAdminWinners(
   accessToken: string,
-  params: { award_type?: string; status?: string; year?: number } = {},
+  params: { award_type?: string; status?: string; month?: string; year?: number; golden_ticket?: boolean } = {},
 ): Promise<WinnerAdminListResponse> {
   const query = buildQuery(params)
   const response = await fetch(`${API_BASE_URL}/admin/winners${query}`, {

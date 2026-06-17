@@ -105,6 +105,11 @@ export default function AdminEntry() {
   const [values, setValues] = useState<CompanyValue[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [recentWinners, setRecentWinners] = useState<WinnerAdmin[]>([])
+  const [directoryAwardType, setDirectoryAwardType] = useState<'ALL' | WinnerCreatePayload['award_type']>('ALL')
+  const [directoryYear, setDirectoryYear] = useState(Math.max(new Date().getFullYear(), 2026))
+  const [directoryPeriod, setDirectoryPeriod] = useState('ALL')
+  const [directoryStatus, setDirectoryStatus] = useState<'ALL' | NonNullable<WinnerCreatePayload['status']>>('ALL')
+  const [directoryGoldenOnly, setDirectoryGoldenOnly] = useState(false)
   const [recipients, setRecipients] = useState<EmailRecipient[]>([])
   const [recipientEmail, setRecipientEmail] = useState('')
   const [recipientName, setRecipientName] = useState('')
@@ -120,6 +125,15 @@ export default function AdminEntry() {
   const [isSending, setIsSending] = useState(false)
   const [isGoldenBusy, setIsGoldenBusy] = useState(false)
   const [isRecipientBusy, setIsRecipientBusy] = useState(false)
+  const directoryPeriods = ['ALL', ...MONTHS_SHORT.map((month) => `${month} ${directoryYear}`)]
+
+  const directoryParams = {
+    award_type: directoryAwardType === 'ALL' ? undefined : directoryAwardType,
+    status: directoryStatus === 'ALL' ? undefined : directoryStatus,
+    month: directoryPeriod === 'ALL' ? undefined : directoryPeriod,
+    year: directoryYear,
+    golden_ticket: directoryGoldenOnly ? true : undefined,
+  }
 
   useEffect(() => {
     void Promise.all([
@@ -144,14 +158,14 @@ export default function AdminEntry() {
     void getAccessToken()
       .then(async (token) => {
         const [winnerData, recipientData] = await Promise.all([
-          fetchAdminWinners(token, { year: payload.award_year }),
+          fetchAdminWinners(token, directoryParams),
           fetchEmailRecipients(token),
         ])
-        setRecentWinners(winnerData.winners.slice(0, 5))
+        setRecentWinners(winnerData.winners)
         setRecipients(recipientData)
       })
       .catch(() => undefined)
-  }, [getAccessToken, isSignedIn, payload.award_year])
+  }, [getAccessToken, isSignedIn, directoryAwardType, directoryYear, directoryPeriod, directoryStatus, directoryGoldenOnly])
 
   const updatePayload = <K extends keyof WinnerCreatePayload>(key: K, value: WinnerCreatePayload[K]) => {
     setPayload((current) => ({ ...current, [key]: value }))
@@ -170,14 +184,14 @@ export default function AdminEntry() {
         ? await updateWinner(editingWinnerId, payload, token)
         : await createWinner(payload, token)
       const renderedPreview = await fetchAwardEmailPreview(saved.id, token)
-      const latest = await fetchAdminWinners(token, { year: payload.award_year })
+      const latest = await fetchAdminWinners(token, directoryParams)
 
       setSavedWinner(saved)
       setPreview(renderedPreview)
       setGoldenPreview(null)
       setGoldenOccasion(saved.golden_ticket_occasion || '')
       setGoldenCeoMessage(saved.golden_ticket_ceo_message || '')
-      setRecentWinners(latest.winners.slice(0, 5))
+      setRecentWinners(latest.winners)
       setEditingWinnerId(saved.id)
       setStatusMessage(
         editingWinnerId
@@ -221,8 +235,8 @@ export default function AdminEntry() {
     try {
       const token = await getAccessToken()
       const archived = await archiveWinner(winnerId, token)
-      const latest = await fetchAdminWinners(token, { year: payload.award_year })
-      setRecentWinners(latest.winners.slice(0, 5))
+      const latest = await fetchAdminWinners(token, directoryParams)
+      setRecentWinners(latest.winners)
       if (editingWinnerId === winnerId || savedWinner?.id === winnerId) {
         setPayload(payloadFromWinner(archived))
         setSavedWinner(archived)
@@ -251,9 +265,9 @@ export default function AdminEntry() {
         token,
       )
       const renderedPreview = await fetchGoldenTicketEmailPreview(updated.id, token)
-      const latest = await fetchAdminWinners(token, { year: payload.award_year })
+      const latest = await fetchAdminWinners(token, directoryParams)
       setSavedWinner(updated)
-      setRecentWinners(latest.winners.slice(0, 5))
+      setRecentWinners(latest.winners)
       setGoldenPreview(renderedPreview)
       setStatusMessage('Golden Ticket saved. Preview rendered from the personalised record.')
     } catch (err) {
@@ -298,6 +312,26 @@ export default function AdminEntry() {
       )
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to send email'
+      setError(message)
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const handleSendAwardForWinner = async (winner: WinnerAdmin) => {
+    setError(null)
+    setStatusMessage(null)
+    setIsSending(true)
+
+    try {
+      const token = await getAccessToken()
+      const result = await sendAwardEmail(winner.id, token)
+      setSavedWinner(winner)
+      setStatusMessage(
+        `Award email for record #${winner.id} sent to ${result.recipients.length} recipient${result.recipients.length === 1 ? '' : 's'}.`,
+      )
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send award email'
       setError(message)
     } finally {
       setIsSending(false)
@@ -703,10 +737,74 @@ export default function AdminEntry() {
             </section>
 
             <section className="rounded-card border border-white/7 bg-white/5 p-5 shadow-xl shadow-black/15">
-              <p className="font-label text-[10px] font-bold uppercase tracking-[2.4px] text-gold">Audit Trail</p>
-              <h2 className="mt-1 font-display text-2xl font-bold text-white">Recent Records</h2>
-              <div className="mt-4 space-y-3">
-                {recentWinners.length === 0 && <p className="text-sm text-white/35">No recent records loaded yet.</p>}
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-label text-[10px] font-bold uppercase tracking-[2.4px] text-gold">Winner Directory</p>
+                  <h2 className="mt-1 font-display text-2xl font-bold text-white">Past Winners</h2>
+                  <p className="mt-1 text-sm text-white/45">Filter saved winners, then select one to edit, archive, resend, or prepare a Golden Ticket.</p>
+                </div>
+                <span className="rounded-badge border border-white/6 bg-deep/45 px-3 py-1.5 font-label text-[10px] font-bold uppercase tracking-wide text-white/45">
+                  {recentWinners.length} shown
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1.5">
+                    <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-white/45">Award type</span>
+                    <select value={directoryAwardType} onChange={(event) => setDirectoryAwardType(event.target.value as typeof directoryAwardType)} className={selectClass} style={darkControlStyle}>
+                      <option className={optionClass} style={darkControlStyle} value="ALL">All award types</option>
+                      <option className={optionClass} style={darkControlStyle} value="CHARTER_CHAMPION">Charter Champion</option>
+                      <option className={optionClass} style={darkControlStyle} value="INSTANT_IMPACT">Instant Impact</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1.5">
+                    <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-white/45">Status</span>
+                    <select value={directoryStatus} onChange={(event) => setDirectoryStatus(event.target.value as typeof directoryStatus)} className={selectClass} style={darkControlStyle}>
+                      <option className={optionClass} style={darkControlStyle} value="ALL">All statuses</option>
+                      <option className={optionClass} style={darkControlStyle} value="PUBLISHED">Published</option>
+                      <option className={optionClass} style={darkControlStyle} value="ARCHIVED">Archived</option>
+                      <option className={optionClass} style={darkControlStyle} value="REMOVED">Removed</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1.5">
+                    <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-white/45">Year</span>
+                    <select
+                      value={directoryYear}
+                      onChange={(event) => {
+                        setDirectoryYear(Number(event.target.value))
+                        setDirectoryPeriod('ALL')
+                      }}
+                      className={selectClass}
+                      style={darkControlStyle}
+                    >
+                      {years.map((year) => <option className={optionClass} style={darkControlStyle} key={year} value={year}>{year}</option>)}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1.5">
+                    <span className="font-label text-[10px] font-semibold uppercase tracking-wider text-white/45">Month</span>
+                    <select value={directoryPeriod} onChange={(event) => setDirectoryPeriod(event.target.value)} className={selectClass} style={darkControlStyle}>
+                      {directoryPeriods.map((period) => (
+                        <option className={optionClass} style={darkControlStyle} key={period} value={period}>{period === 'ALL' ? 'All months' : period}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <label className="flex items-center gap-2 rounded-btn border border-white/6 bg-deep/35 px-3 py-2 text-sm text-white/60">
+                  <input
+                    type="checkbox"
+                    checked={directoryGoldenOnly}
+                    onChange={(event) => setDirectoryGoldenOnly(event.target.checked)}
+                    className="h-4 w-4 accent-gold"
+                  />
+                  Golden Ticket winners only
+                </label>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {recentWinners.length === 0 && <p className="text-sm text-white/35">No winner records match these filters.</p>}
                 {recentWinners.map((winner) => (
                   <div key={winner.id} className="rounded-btn border border-white/6 bg-deep/35 p-3 transition hover:border-gold/15">
                     <div className="flex items-start justify-between gap-3">
@@ -719,6 +817,11 @@ export default function AdminEntry() {
                         <span className={`rounded-badge px-2 py-1 font-label text-[9px] font-bold uppercase tracking-wide ${winner.status === 'PUBLISHED' ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-white/35'}`}>
                           {winner.status}
                         </span>
+                        {winner.golden_ticket && (
+                          <span className="rounded-badge bg-gold/15 px-2 py-1 font-label text-[9px] font-bold uppercase tracking-wide text-gold-soft">
+                            Golden Ticket
+                          </span>
+                        )}
                       </div>
                     </div>
                     <p className="mt-1 text-xs text-white/45">{winner.award_month} · {winner.subcategory}</p>
@@ -728,7 +831,7 @@ export default function AdminEntry() {
                         onClick={() => void handleEditWinner(winner)}
                         className="rounded-btn border border-white/8 bg-white/5 px-3 py-1.5 font-label text-[11px] font-semibold uppercase tracking-wide text-white/60 transition hover:text-white"
                       >
-                        Edit
+                        Select / Edit
                       </button>
                       <button
                         type="button"
@@ -737,6 +840,14 @@ export default function AdminEntry() {
                         className="rounded-btn border border-amber/25 bg-amber/10 px-3 py-1.5 font-label text-[11px] font-semibold uppercase tracking-wide text-gold-soft transition hover:bg-amber/15 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Archive
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleSendAwardForWinner(winner)}
+                        disabled={isSending || winner.status !== 'PUBLISHED'}
+                        className="rounded-btn border border-gold/20 bg-gold/10 px-3 py-1.5 font-label text-[11px] font-semibold uppercase tracking-wide text-gold-soft transition hover:bg-gold/15 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Send Award
                       </button>
                     </div>
                   </div>

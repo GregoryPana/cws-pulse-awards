@@ -18,9 +18,9 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export function buildQuery(params: Record<string, string | number | undefined>): string {
+export function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
   const entries = Object.entries(params).filter(
-    (e): e is [string, string | number] => e[1] !== undefined,
+    (e): e is [string, string | number | boolean] => e[1] !== undefined,
   )
   if (entries.length === 0) return ''
   return '?' + entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')

@@ -181,6 +181,39 @@ def test_list_admin_winners_returns_saved_records() -> None:
         app.dependency_overrides.clear()
 
 
+def test_list_admin_winners_accepts_directory_filters() -> None:
+    """List endpoint should accept award, month, year, status, and Golden Ticket filters."""
+
+    class FakeSession:
+        async def execute(self, statement) -> FakeScalarResult:
+            return FakeScalarResult([FakeWinner()])
+
+    async def override_get_db():
+        yield FakeSession()  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.get(
+            "/api/v1/admin/winners",
+            params={
+                "award_type": "CHARTER_CHAMPION",
+                "status": "PUBLISHED",
+                "month": "Jun 2026",
+                "year": 2026,
+                "golden_ticket": True,
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 1
+        assert data["winners"][0]["award_month"] == "Jun 2026"
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_update_winner_changes_record_and_audit_user() -> None:
     """Update endpoint should edit winner fields and record the admin updater."""
 

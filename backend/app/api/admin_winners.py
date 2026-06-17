@@ -101,7 +101,9 @@ def _award_email_subject(winner: Winner) -> str:
 async def list_admin_winners(
     award_type: str | None = Query(None),
     status_filter: str | None = Query(None, alias="status"),
+    month: str | None = Query(None),
     year: int | None = Query(None),
+    golden_ticket: bool | None = Query(None),
     claims: dict[str, Any] = Depends(require_admin_claims),
     db: AsyncSession = Depends(get_db_session),
 ) -> WinnerAdminListResponse:
@@ -113,8 +115,12 @@ async def list_admin_winners(
         query = query.where(Winner.award_type == award_type)
     if status_filter:
         query = query.where(Winner.status == status_filter)
+    if month:
+        query = query.where(Winner.award_month == month)
     if year:
         query = query.where(Winner.award_year == year)
+    if golden_ticket is not None:
+        query = query.where(Winner.golden_ticket.is_(golden_ticket))
     query = query.order_by(Winner.id.desc())
 
     result = await db.execute(query)
