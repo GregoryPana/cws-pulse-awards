@@ -1,3 +1,5 @@
+import { Handshake, Sparkles, Trophy } from 'lucide-react'
+
 interface Props {
   label: string
   variant: 'peer' | 'manager' | 'gold'
@@ -9,13 +11,15 @@ const styles: Record<string, string> = {
   gold: 'bg-gold/15 text-gold-soft border-gold/30',
 }
 
-const icons: Record<string, string> = {
-  peer: '\u{1F91D}',
-  manager: '\u{1F3C6}',
-  gold: '\u{2B50}',
+const icons = {
+  peer: Handshake,
+  manager: Trophy,
+  gold: Sparkles,
 }
 
 export default function CategoryBadge({ label, variant }: Props) {
+  const Icon = icons[variant]
+
   return (
     <span
       className={`
@@ -25,7 +29,7 @@ export default function CategoryBadge({ label, variant }: Props) {
         ${styles[variant]}
       `}
     >
-      <span aria-hidden="true">{icons[variant]}</span>
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.2} />
       {label}
     </span>
   )

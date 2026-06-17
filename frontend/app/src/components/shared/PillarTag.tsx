@@ -1,3 +1,5 @@
+import { Milestone } from 'lucide-react'
+
 interface Props {
   pillar: string
   variant: 'blue' | 'gold'
@@ -18,7 +20,7 @@ export default function PillarTag({ pillar, variant }: Props) {
         ${styles[variant]}
       `}
     >
-      <span aria-hidden="true">{'\u{1F4CC}'}</span>
+      <Milestone className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.2} />
       {pillar}
     </span>
   )

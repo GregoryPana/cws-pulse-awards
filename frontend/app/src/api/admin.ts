@@ -76,6 +76,33 @@ export async function createWinner(
   return handle<WinnerAdmin>(response)
 }
 
+export async function updateWinner(
+  winnerId: number,
+  payload: WinnerCreatePayload,
+  accessToken: string,
+): Promise<WinnerAdmin> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  return handle<WinnerAdmin>(response)
+}
+
+export async function archiveWinner(
+  winnerId: number,
+  accessToken: string,
+): Promise<WinnerAdmin> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/archive`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handle<WinnerAdmin>(response)
+}
+
 export async function fetchAdminWinners(
   accessToken: string,
   params: { award_type?: string; status?: string; year?: number } = {},

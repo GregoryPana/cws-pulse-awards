@@ -1,5 +1,6 @@
 """Admin winner API routes for MVP entry and email preview."""
 
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -171,6 +172,64 @@ async def get_admin_winner(
     winner = result.scalar_one_or_none()
     if winner is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Winner not found")
+    return WinnerAdmin.model_validate(winner)
+
+
+@router.patch("/admin/winners/{winner_id}", response_model=WinnerAdmin)
+async def update_admin_winner(
+    winner_id: int,
+    payload: WinnerCreate,
+    claims: dict[str, Any] = Depends(require_admin_claims),
+    db: AsyncSession = Depends(get_db_session),
+) -> WinnerAdmin:
+    """Update an existing winner record without sending email."""
+
+    result = await db.execute(select(Winner).where(Winner.id == winner_id))
+    winner = result.scalar_one_or_none()
+    if winner is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Winner not found")
+
+    winner.award_type = payload.award_type
+    winner.first_name = payload.first_name
+    winner.last_name = payload.last_name
+    winner.job_title = payload.job_title
+    winner.department = payload.department
+    winner.subcategory = payload.subcategory
+    winner.charter_pillar = payload.charter_pillar
+    winner.company_value = payload.company_value
+    winner.story = payload.story
+    winner.nominated_by = payload.nominated_by
+    winner.photo_url = payload.photo_url
+    winner.award_month = payload.award_month
+    winner.award_year = payload.award_year
+    winner.status = payload.status
+    winner.updated_by = _admin_identifier(claims)
+    winner.updated_at = datetime.now(UTC)
+
+    await db.commit()
+    await db.refresh(winner)
+    return WinnerAdmin.model_validate(winner)
+
+
+@router.patch("/admin/winners/{winner_id}/archive", response_model=WinnerAdmin)
+async def archive_admin_winner(
+    winner_id: int,
+    claims: dict[str, Any] = Depends(require_admin_claims),
+    db: AsyncSession = Depends(get_db_session),
+) -> WinnerAdmin:
+    """Archive a winner so it is no longer returned by public Hall of Fame routes."""
+
+    result = await db.execute(select(Winner).where(Winner.id == winner_id))
+    winner = result.scalar_one_or_none()
+    if winner is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Winner not found")
+
+    winner.status = "ARCHIVED"
+    winner.updated_by = _admin_identifier(claims)
+    winner.updated_at = datetime.now(UTC)
+
+    await db.commit()
+    await db.refresh(winner)
     return WinnerAdmin.model_validate(winner)
 
 

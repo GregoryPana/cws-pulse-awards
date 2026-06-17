@@ -180,6 +180,88 @@ def test_list_admin_winners_returns_saved_records() -> None:
         app.dependency_overrides.clear()
 
 
+def test_update_winner_changes_record_and_audit_user() -> None:
+    """Update endpoint should edit winner fields and record the admin updater."""
+
+    class FakeSession:
+        committed = False
+        refreshed = False
+        winner = FakeWinner()
+
+        async def execute(self, statement) -> FakeScalarResult:
+            return FakeScalarResult(self.winner)
+
+        async def commit(self) -> None:
+            self.committed = True
+
+        async def refresh(self, winner: Any) -> None:
+            self.refreshed = True
+
+    session = FakeSession()
+
+    async def override_get_db():
+        yield session  # type: ignore[return-value]
+
+    payload = winner_payload()
+    payload["first_name"] = "Jean"
+    payload["status"] = "PUBLISHED"
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.patch("/api/v1/admin/winners/7", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["first_name"] == "Jean"
+        assert data["updated_by"] == "admin@test.com"
+        assert session.winner.first_name == "Jean"
+        assert session.committed is True
+        assert session.refreshed is True
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_archive_winner_sets_archived_status() -> None:
+    """Archive endpoint should mark a winner archived without deleting it."""
+
+    class FakeSession:
+        committed = False
+        refreshed = False
+        winner = FakeWinner()
+
+        async def execute(self, statement) -> FakeScalarResult:
+            return FakeScalarResult(self.winner)
+
+        async def commit(self) -> None:
+            self.committed = True
+
+        async def refresh(self, winner: Any) -> None:
+            self.refreshed = True
+
+    session = FakeSession()
+
+    async def override_get_db():
+        yield session  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.patch("/api/v1/admin/winners/7/archive")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ARCHIVED"
+        assert data["updated_by"] == "admin@test.com"
+        assert session.winner.status == "ARCHIVED"
+        assert session.committed is True
+        assert session.refreshed is True
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_award_email_preview_renders_saved_winner() -> None:
     """Award email preview should render from the saved winner and settings."""
 

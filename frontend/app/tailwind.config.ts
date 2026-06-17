@@ -23,11 +23,11 @@ export default {
         'mist-md': 'rgba(255,255,255,0.10)',
       },
       borderRadius: {
-        card: '18px',
-        modal: '16px',
-        badge: '20px',
+        card: '10px',
+        modal: '10px',
+        badge: '8px',
         tag: '6px',
-        btn: '10px',
+        btn: '6px',
       },
       keyframes: {
         fadeUp: {

@@ -42,10 +42,10 @@ export default function MonthNav({ activeMonth, onChange, variant, year }: Props
   return (
     <nav
       ref={navRef}
-      className="w-full overflow-x-auto px-8 pb-12 scrollbar-none snap-x snap-mandatory"
+      className="w-full overflow-x-auto px-4 pb-12 scrollbar-none snap-x snap-mandatory md:px-8"
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
     >
-      <div className="mx-auto flex w-max items-center justify-center gap-2">
+      <div className="mx-auto flex w-max min-w-full items-center justify-center gap-2">
         {MONTHS.map((m) => {
           const label = monthLabel(m, year)
           const isActive = activeMonth === label || (m === 'All' && activeMonth === 'All')
@@ -60,7 +60,7 @@ export default function MonthNav({ activeMonth, onChange, variant, year }: Props
                 ${
                   isActive
                     ? activeClass
-                    : 'bg-mist border-white/12 text-white/50 hover:border-white/30 hover:text-white'
+                    : 'bg-[#07182A]/90 border-white/8 text-white/55 shadow-inner shadow-black/20 hover:-translate-y-0.5 hover:border-white/15 hover:bg-[#0B1C30] hover:text-white hover:shadow-lg hover:shadow-black/20'
                 }
               `}
               aria-pressed={isActive}
