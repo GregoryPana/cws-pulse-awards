@@ -18,3 +18,75 @@ body {
   background: rgba(245, 166, 35, 0.25);
   color: white;
 }
+
+/*
+ * Border trace — a glowing light beam that endlessly travels the border of a card.
+ * The element is masked down to a thin ring; an oversized rotating conic gradient
+ * inside it becomes the moving beam. Colour/speed via --trace-color / --trace-duration.
+ */
+@layer components {
+  .border-trace {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    pointer-events: none;
+    overflow: hidden;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+
+  .border-trace::before {
+    content: '';
+    position: absolute;
+    inset: -150%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 300deg,
+      var(--trace-color, rgba(245, 166, 35, 0.9)) 336deg,
+      transparent 360deg
+    );
+    animation: traceSpin var(--trace-duration, 8s) linear infinite;
+  }
+
+  /* Golden Ticket: two brighter beams chasing each other on a thicker ring. */
+  .border-trace--golden {
+    padding: 2px;
+  }
+
+  .border-trace--golden::before {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 120deg,
+      rgba(255, 209, 102, 0.95) 160deg,
+      transparent 180deg,
+      transparent 300deg,
+      rgba(245, 166, 35, 0.9) 340deg,
+      transparent 360deg
+    );
+  }
+}
+
+@keyframes traceSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.15s !important;
+  }
+}

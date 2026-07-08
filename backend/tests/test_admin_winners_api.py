@@ -101,6 +101,13 @@ def winner_payload() -> dict[str, Any]:
     }
 
 
+def test_award_template_name_maps_supported_award_types() -> None:
+    """Template selection should route each award type to its intended email."""
+
+    assert admin_winners_api._award_template_name("CHARTER_CHAMPION") == "award_charter_champion.html"
+    assert admin_winners_api._award_template_name("INSTANT_IMPACT") == "award_instant_impact.html"
+
+
 def test_create_winner_requires_admin_auth() -> None:
     """Create endpoint should reject unauthenticated users."""
 
@@ -373,6 +380,55 @@ def test_award_email_send_uses_active_recipients(monkeypatch: pytest.MonkeyPatch
         assert sent["template_name"] == "award_charter_champion.html"
         assert sent["context"]["winner_first_name"] == "Marie"
         assert sent["recipients"] == ["pc-team@test.com"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_instant_impact_email_send_uses_manager_template(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Instant Impact winners should use the manager-to-staff template."""
+
+    sent: dict[str, Any] = {}
+
+    async def fake_send_templated_email(
+        template_name: str,
+        context: dict[str, Any],
+        recipients: list[str],
+    ) -> None:
+        sent["template_name"] = template_name
+        sent["context"] = context
+        sent["recipients"] = recipients
+
+    monkeypatch.setattr(admin_winners_api, "send_templated_email", fake_send_templated_email)
+
+    class FakeInstantWinner(FakeWinner):
+        award_type = "INSTANT_IMPACT"
+        subcategory = "Service Recovery Excellence"
+        first_name = "Vania"
+
+    class FakeSession:
+        call_count = 0
+
+        async def execute(self, statement) -> FakeScalarResult:
+            self.call_count += 1
+            if self.call_count == 1:
+                return FakeScalarResult(FakeInstantWinner())
+            if self.call_count == 2:
+                return FakeScalarResult([FakeRecipient("pc-team@test.com")])
+            return FakeScalarResult([FakeSetting("hall_of_fame_url", "https://pulse.cwsey.com")])
+
+    async def override_get_db():
+        yield FakeSession()  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.post("/api/v1/admin/winners/7/email-send")
+        assert response.status_code == 200
+        assert sent["template_name"] == "award_instant_impact.html"
+        assert sent["context"]["award_type_label"] == "Instant Impact"
+        assert sent["context"]["winner_first_name"] == "Vania"
     finally:
         app.dependency_overrides.clear()
 

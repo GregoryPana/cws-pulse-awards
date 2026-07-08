@@ -1,32 +1,26 @@
 import { useState, useMemo } from 'react'
-import { TriangleAlert, Trophy } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ChampionIcon } from '@hugeicons/core-free-icons'
+import { useStaggerReveal } from '../lib/animations'
+import { MONTHS_SHORT, currentMonthIndex, currentYear, isPreLaunch } from '../lib/dates'
 import AnimatedBackground from '../components/shared/AnimatedBackground'
 import Header from '../components/layout/Header'
-import MonthNav from '../components/shared/MonthNav'
+import PeriodNav from '../components/shared/PeriodNav'
 import HallFilters from '../components/shared/HallFilters'
 import AwardCard from '../components/shared/AwardCard'
 import EmptyState from '../components/shared/EmptyState'
+import PreLaunchNotice from '../components/shared/PreLaunchNotice'
 import { useWinners } from '../hooks/useWinners'
 import { useSubcategories } from '../hooks/useConfig'
 
-const MONTHS_SHORT = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-]
-
-function filterYears(currentYear: number): number[] {
-  const startYear = 2026
-  const endYear = Math.max(currentYear, startYear)
-  return Array.from({ length: endYear - startYear + 1 }, (_, index) => endYear - index)
-}
-
 export default function InstantImpact() {
-  const now = new Date()
-  const defaultMonth = `${MONTHS_SHORT[now.getMonth()]} ${now.getFullYear()}`
+  const defaultMonth = `${MONTHS_SHORT[currentMonthIndex()]} ${currentYear()}`
   const [activeMonth, setActiveMonth] = useState(defaultMonth)
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedYear, setSelectedYear] = useState(currentYear())
   const [selectedCategory, setSelectedCategory] = useState('All')
 
+  const preLaunch = isPreLaunch(activeMonth)
   const { winners, state } = useWinners('INSTANT_IMPACT', activeMonth, selectedYear)
   const { subcategories } = useSubcategories('INSTANT_IMPACT')
 
@@ -43,14 +37,22 @@ export default function InstantImpact() {
             selectedCategory === 'All' || winner.subcategory === selectedCategory,
         )
         .sort((a, b) => {
-        if (a.golden_ticket && !b.golden_ticket) return -1
-        if (!a.golden_ticket && b.golden_ticket) return 1
-        return 0
-      }),
+          if (a.golden_ticket && !b.golden_ticket) return -1
+          if (!a.golden_ticket && b.golden_ticket) return 1
+          return 0
+        }),
     [selectedCategory, winners],
   )
 
   const heroPeriod = activeMonth === 'All' ? `All months in ${selectedYear}` : activeMonth
+  const gridRef = useStaggerReveal<HTMLDivElement>('[data-card]', [sorted])
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year)
+    if (activeMonth !== 'All') {
+      setActiveMonth(`${activeMonth.slice(0, 3)} ${year}`)
+    }
+  }
 
   return (
     <div className="relative min-h-screen bg-deep overflow-hidden">
@@ -61,7 +63,7 @@ export default function InstantImpact() {
 
         <section className="text-center px-6 pt-[52px] pb-10">
           <p className="mx-auto mb-4 inline-flex items-center gap-2 rounded-badge border border-gold/25 bg-gold/10 px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[3px] text-gold animate-fadeUp opacity-0 [animation-delay:0.1s]">
-            <Trophy className="h-4 w-4" aria-hidden="true" strokeWidth={2.2} /> Manager-to-Staff Recognition
+            <HugeiconsIcon icon={ChampionIcon} size={16} strokeWidth={2} aria-hidden="true" /> Manager-to-Staff Recognition
           </p>
           <h1 className="font-display font-black text-[clamp(34px,5.5vw,64px)] leading-[1.05] mb-4 animate-fadeUp opacity-0 [animation-delay:0.25s]">
             Instant<br />
@@ -86,23 +88,16 @@ export default function InstantImpact() {
 
         <div className="w-[60px] h-[2px] mx-auto mb-10 bg-gradient-to-r from-transparent via-gold to-transparent animate-fadeUp opacity-0 [animation-delay:0.65s]" />
 
-        <MonthNav
+        <PeriodNav
           activeMonth={activeMonth}
-          onChange={setActiveMonth}
-          variant="gold"
           year={selectedYear}
+          onChange={setActiveMonth}
+          onYearChange={handleYearChange}
+          variant="gold"
         />
 
         <HallFilters
           variant="gold"
-          selectedYear={selectedYear}
-          years={filterYears(now.getFullYear())}
-          onYearChange={(year) => {
-            setSelectedYear(year)
-            if (activeMonth !== 'All') {
-              setActiveMonth(`${activeMonth.slice(0, 3)} ${year}`)
-            }
-          }}
           selectedCategory={selectedCategory}
           categories={categories}
           onCategoryChange={setSelectedCategory}
@@ -126,17 +121,20 @@ export default function InstantImpact() {
             </div>
           )}
 
-          {state === 'success' && sorted.length === 0 && (
+          {state === 'success' && sorted.length === 0 && preLaunch && (
+            <PreLaunchNotice period={activeMonth} />
+          )}
+
+          {state === 'success' && sorted.length === 0 && !preLaunch && (
             <EmptyState message="No Instant Impact awards match these filters yet." />
           )}
 
           {state === 'success' && sorted.length > 0 && (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-              {sorted.map((w, i) => (
+            <div ref={gridRef} className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+              {sorted.map((w) => (
                 <AwardCard
                   key={w.id}
                   winner={w}
-                  index={i}
                   variant="gold"
                   awardTypeLabel="Instant Impact"
                 />

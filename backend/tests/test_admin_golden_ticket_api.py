@@ -236,6 +236,52 @@ def test_mark_golden_ticket_updates_winner_and_audit_fields() -> None:
         app.dependency_overrides.clear()
 
 
+def test_mark_golden_ticket_allows_archived_past_winner_selection() -> None:
+    """Golden Ticket selection is discretionary and should work for past saved winners."""
+
+    class FakeSession:
+        committed = False
+        refreshed = False
+        winner = FakeWinner()
+
+        async def execute(self, statement) -> FakeWinnerResult:
+            return FakeWinnerResult(self.winner)
+
+        async def commit(self) -> None:
+            self.committed = True
+
+        async def refresh(self, winner: Any) -> None:
+            self.refreshed = True
+
+    session = FakeSession()
+    session.winner.status = "ARCHIVED"
+    session.winner.award_year = 2026
+    session.winner.award_month = "Jan 2026"
+    session.winner.golden_ticket = False
+
+    async def override_get_db():
+        yield session  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.patch(
+            "/api/v1/admin/winners/1/golden-ticket",
+            json={"occasion_label": "Executive Spotlight", "ceo_message": "A past winner now receives the Golden Ticket."},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["golden_ticket"] is True
+        assert data["status"] == "ARCHIVED"
+        assert session.winner.golden_ticket_occasion == "Executive Spotlight"
+        assert session.committed is True
+        assert session.refreshed is True
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_email_preview_returns_html_and_subject() -> None:
     """Email preview should return rendered HTML and subject for a valid winner."""
 

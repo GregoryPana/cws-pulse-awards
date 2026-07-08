@@ -29,8 +29,11 @@ def test_render_email_renders_charter_champion_template() -> None:
     assert "Charter Champion" in html
     assert "Great collaboration story" in html
     assert "A New" in html
+    assert "Peer-to-Peer Recognition" in html
+    assert "colleague-to-colleague" in html
+    assert "View this peer recognition" in html
     assert "Open Hall of Fame" in html
-    assert "Living the Charter. Leading the Techco." in html
+    assert "Peer recognised. Charter led. Techco ready." in html
 
 
 def test_render_email_renders_instant_impact_template() -> None:
@@ -57,7 +60,10 @@ def test_render_email_renders_instant_impact_template() -> None:
     assert "Vania" in html
     assert "Malbrook" in html
     assert "Instant Impact" in html
-    assert "Recognising action that moved the needle" in html
+    assert "Recognising action that moved the needle" not in html
+    assert "Manager-to-Staff Recognition" in html
+    assert "A leadership recognition" in html
+    assert "View this manager recognition" in html
     assert "Open Hall of Fame" in html
 
 
@@ -95,7 +101,8 @@ def test_render_email_renders_golden_ticket_template() -> None:
     assert "Thank you for your dedication" in html
     assert "Naadir Hassan" in html
     assert "Golden Ticket Recognition" in html
-    assert "A premium recognition" in html
+    assert "An elevated recognition reserved" in html
+    assert "Executive recognition" in html
 
 
 def test_render_email_handles_missing_optional_fields() -> None:

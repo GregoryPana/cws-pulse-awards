@@ -1,19 +1,23 @@
-import { Handshake, Sparkles, Trophy } from 'lucide-react'
+import { Handshake, Sparkles, Trophy, Zap } from 'lucide-react'
 
 interface Props {
   label: string
-  variant: 'peer' | 'manager' | 'gold'
+  variant: 'peer' | 'manager' | 'impact' | 'gold'
 }
 
+/* 'impact' is the muted amber used on standard Instant Impact cards;
+   bright 'gold' (with Sparkles) is reserved for Golden Ticket cards. */
 const styles: Record<string, string> = {
   peer: 'bg-blue/20 text-sky border-sky/30',
   manager: 'bg-blue/15 text-[#60C4F0] border-blue/30',
+  impact: 'bg-amber/15 text-[#F5B968] border-amber/40',
   gold: 'bg-gold/15 text-gold-soft border-gold/30',
 }
 
 const icons = {
   peer: Handshake,
   manager: Trophy,
+  impact: Zap,
   gold: Sparkles,
 }
 

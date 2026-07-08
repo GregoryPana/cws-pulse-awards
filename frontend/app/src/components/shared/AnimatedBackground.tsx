@@ -6,11 +6,11 @@ interface Props {
 
 const orbStyles: Record<Variant, { grid: string; orbs: { size: string; pos: string; bg: string; delay: string }[] }> = {
   blue: {
-    grid: 'rgba(0,112,192,.07)',
+    grid: 'rgba(0,112,192,.05)',
     orbs: [
-      { size: '500px', pos: 'top-[-150px] left-[-100px]', bg: 'rgba(0,112,192,.18)', delay: '0s' },
-      { size: '400px', pos: 'bottom-[-100px] right-[-80px]', bg: 'rgba(245,166,35,.10)', delay: '-6s' },
-      { size: '300px', pos: 'top-[40%] left-[55%]', bg: 'rgba(0,163,217,.12)', delay: '-12s' },
+      { size: '500px', pos: 'top-[-150px] left-[-100px]', bg: 'rgba(0,112,192,.12)', delay: '0s' },
+      { size: '400px', pos: 'bottom-[-100px] right-[-80px]', bg: 'rgba(245,166,35,.07)', delay: '-6s' },
+      { size: '300px', pos: 'top-[40%] left-[55%]', bg: 'rgba(0,163,217,.08)', delay: '-12s' },
     ],
   },
   gold: {

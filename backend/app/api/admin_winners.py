@@ -131,6 +131,38 @@ async def list_admin_winners(
     )
 
 
+@router.post("/admin/winners/preview", response_model=EmailPreviewResponse)
+async def preview_award_email_from_payload(
+    payload: WinnerCreate,
+    claims: dict[str, Any] = Depends(require_admin_claims),
+    db: AsyncSession = Depends(get_db_session),
+) -> EmailPreviewResponse:
+    """Render a preview of the award email from an unsaved payload."""
+
+    del claims
+    settings = await _public_settings(db)
+
+    context = {
+        "winner_first_name": payload.first_name,
+        "winner_last_name": payload.last_name,
+        "winner_job_title": payload.job_title,
+        "winner_department": payload.department,
+        "award_type_label": _award_type_label(payload.award_type),
+        "subcategory": payload.subcategory,
+        "charter_pillar": payload.charter_pillar,
+        "company_value": payload.company_value,
+        "story": payload.story,
+        "nominated_by": payload.nominated_by or "A colleague",
+        "award_month": payload.award_month,
+        "hall_of_fame_url": settings.get("hall_of_fame_url", ""),
+        "photo_url": payload.photo_url,
+    }
+
+    html = render_email(_award_template_name(payload.award_type), context)
+    subject = f"CWS Pulse Awards — New {_award_type_label(payload.award_type)}: {payload.first_name} {payload.last_name}"
+    return EmailPreviewResponse(html=html, subject=subject)
+
+
 @router.post("/admin/winners", response_model=WinnerAdmin, status_code=status.HTTP_201_CREATED)
 async def create_admin_winner(
     payload: WinnerCreate,

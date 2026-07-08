@@ -130,6 +130,21 @@ export async function fetchAwardEmailPreview(
   return handle<EmailPreviewResponse>(response)
 }
 
+export async function fetchAwardEmailPreviewFromPayload(
+  payload: WinnerCreatePayload,
+  accessToken: string,
+): Promise<EmailPreviewResponse> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/preview`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  return handle<EmailPreviewResponse>(response)
+}
+
 export async function sendAwardEmail(
   winnerId: number,
   accessToken: string,

@@ -2,6 +2,7 @@
 **Document Type:** Frontend Design Reference
 **Owner:** Gregory, Digital Transformation Office
 **Status:** Confirmed — apply from Phase 1 onwards
+**Last revised:** July 2026 — added §9 Component Layer, §10 Iconography, §11 Feedback & Guidance, §12 Admin Portal IA, §13 Voice & Tone, §14 Opacity Conventions
 
 ---
 
@@ -91,7 +92,9 @@ Usage in Tailwind: `font-display`, `font-body`, `font-label`
 }
 ```
 
-**Background per page**: Charter Champions uses `--color-navy` as body background; Instant Impact uses `--color-deep`. This intentional difference gives the gold award type a deeper, more dramatic feel.
+**Background per page**: Charter Champions uses `navy-deep` (`#061528`, a darkened navy added July 2026 so cards and gold accents pop against it); Instant Impact uses `--color-deep`. Both walls are intentionally dark canvases — brand colour comes from the cards, orbs, and accents, not the page background.
+
+**Card accent separation (July 2026)**: standard Instant Impact cards use a muted amber/bronze register (`amber` tones, Zap badge icon) so that Golden Ticket cards — animated foil border, breathing gold glow, bright `gold-soft` accents, Sparkles icon — remain unmistakably the brightest thing on the wall. Every card carries a constant `border-trace` beam (sky on the blue wall, amber on the gold wall, dual bright-gold beams on Golden Ticket).
 
 ### Tailwind Colour Extension
 
@@ -246,14 +249,37 @@ When no cards match the active month filter, replace the grid with a centred emp
   [Text]                 — 15px / rgba(white,.3) / line-height 1.6
 ```
 
-### Month Navigation
+### Period Navigation (`PeriodNav`, July 2026)
 
-- Buttons: Outfit font, 12px, 600 weight
-- Jan–Dec buttons + "All" button
-- Active state per award type:
-  - Charter Champion active: `background: var(--color-blue)`, white text
-  - Instant Impact active: `background: linear-gradient(135deg, var(--color-amber), var(--color-gold))`, navy text
-- Horizontal scroll on mobile (no wrapping)
+Replaces the flat month row. Combines a **year stepper** with a launch-aware **month
+selector** so the wall scales cleanly as years accumulate. All launch logic lives in
+`frontend/app/src/lib/dates.ts` (single source of truth — never hard-code the launch date).
+
+- **Year stepper**: centered ‹ year › control (Cormorant 3xl). Arrows are bounded — you can
+  never step past the current year or before the launch year (2026). Disabled arrows drop to
+  30% opacity.
+- **Month chips**: "Full Year" + Jan–Dec. Each month is classified by `monthState(year, i)`:
+  - `available` (launch ≤ period ≤ now): normal chip; active state per wall — Charter Champion
+    `--color-blue` white text, Instant Impact amber→gold gradient navy text.
+  - `prelaunch` (before Jun 2026): dashed border, muted, **Lock** icon, still clickable — selecting
+    it shows the pre-launch notice rather than a bare empty state.
+  - `future` (after this month): dashed, 20% opacity, disabled, `title` explains why.
+- Horizontal scroll on mobile (no wrapping); wheel-to-scroll enabled.
+
+### Programme Launch Rule
+
+The programme launched **June 2026** (`LAUNCH_LABEL`). No winners can exist before it.
+
+- Selecting any pre-launch period renders `PreLaunchNotice` — a calm, explanatory empty state
+  ("Nothing here — and that's expected… the programme began in Jun 2026") — never the generic
+  "no winners match" copy.
+- Selectable years everywhere (walls + admin) come from `selectableYears()` = launch year →
+  current year, newest first.
+
+### Category Filter (`HallFilters`)
+
+Year moved into `PeriodNav`, so `HallFilters` is now a single centered **category** selector
+(max-width 420px) beneath the period nav — one job per control.
 
 ### Entry Form (Admin Modal)
 
@@ -440,6 +466,185 @@ Use `--color-blue` as the focus ring color inside Charter Champion flows where g
 - Month filter buttons must include `aria-pressed` state
 - Live badge dot is decorative — add `aria-hidden="true"` to the dot element
 - Card grid uses semantic list markup (`<ul>` / `<li>`) in the React implementation
+
+---
+
+## 9. Component Layer (shadcn-style)
+
+The admin portal is built on a themed component library at `frontend/app/src/components/ui/`,
+following the shadcn/ui pattern: components are copied into the repo (not imported from a
+package) and built on Radix UI primitives, styled entirely with the Pulse Awards tokens above.
+
+| Component | File | Primitive | Notes |
+|---|---|---|---|
+| `Button` | `ui/button.tsx` | native + Slot | Variants: `default` (gold gradient, navy text), `secondary` (glass), `outline` (gold outline), `ghost`, `destructive` (soft red). Sizes: `sm`, `default`, `lg`, `icon` |
+| `Input` / `Textarea` | `ui/input.tsx`, `ui/textarea.tsx` | native | Dark control: `#0B1C30` fill, `border-white/[0.06]`, gold focus ring |
+| `Select` | `ui/select.tsx` | @radix-ui/react-select | Dark popover, gold check on the selected item |
+| `Tabs` | `ui/tabs.tsx` | @radix-ui/react-tabs | Pill TabsList; active trigger = amber→gold gradient with navy text |
+| `Switch` | `ui/switch.tsx` | @radix-ui/react-switch | Gold when on; used for on/off recipient state |
+| `Card` family | `ui/card.tsx` | native | Glass card: `border-white/[0.05]`, white 6%→1.5% gradient, backdrop blur. Includes `CardEyebrow` (gold micro-label) |
+| `Badge` | `ui/badge.tsx` | native | Variants: `default` (gold), `success` (emerald), `muted`, `outline`, `destructive` |
+| `Label` | `ui/label.tsx` | @radix-ui/react-label | Outfit 11px uppercase, `text-white/55` |
+
+Utility: `cn()` in `src/lib/utils.ts` (clsx + tailwind-merge). All new UI must compose these
+components rather than restyling raw elements.
+
+Shared admin patterns (form fields with completion ticks, live email preview hook, step
+indicator) live in `frontend/app/src/pages/admin/shared.tsx`.
+
+---
+
+## 10. Iconography
+
+Two icon sets are used deliberately — do not mix their roles:
+
+| Set | Package | Used for | Examples |
+|---|---|---|---|
+| **Hugeicons** | `@hugeicons/react` + `@hugeicons/core-free-icons` | Public Wall of Fame pages and celebratory/brand moments | Hero eyebrows (`Agreement01Icon`, `ChampionIcon`), featured story (`SparklesIcon`), empty states (`Award01Icon`) |
+| **Lucide** | `lucide-react` | Admin portal functional UI: actions, forms, navigation, status | `Save`, `Send`, `Archive`, `Trash2`, `CheckCircle2`, `Loader2`, tab icons |
+
+Rule of thumb: if the icon celebrates a person or decorates the public experience → Hugeicons.
+If the icon labels an action or a system state → Lucide. Hugeicons render via
+`<HugeiconsIcon icon={Name01Icon} size={16} strokeWidth={2} />`.
+
+---
+
+## 11. Feedback & Guidance Patterns
+
+Every admin action must tell the user what is happening. The system provides four layers:
+
+1. **Toasts (sonner)** — every completed or failed action fires a toast: title in plain
+   language + one-sentence description of what happened and what to do next. Success uses
+   `toast.success`, failures `toast.error`. The `<Toaster>` is mounted once in the admin shell
+   (bottom-right, dark theme, `#0B1C30` panel).
+2. **Loading states** — any in-flight action swaps the button icon for a spinning `Loader2`
+   and changes the label to present tense ("Saving...", "Sending..."). Buttons disable while busy.
+3. **Completion ticks** — required form fields show a small emerald `CheckCircle2` next to
+   the label the moment they are filled in. The Add Winner flow also shows a 4-step indicator
+   (Fill in → Preview → Save → Send) where each step is numbered, turns gold when it is the
+   current step, and shows a tick when done.
+4. **Persistent state badges** — records show "All changes saved ✓" / "Changes not saved yet"
+   badges so the user always knows whether the database matches the screen. The live email
+   preview carries an "Up to date / Updating..." badge with a pulsing dot while rendering.
+
+Buttons that cannot be pressed yet must say why in muted helper text next to them
+("Save unlocks when every starred field is filled in.").
+
+---
+
+## 12. Admin Portal Information Architecture
+
+The admin portal (`/admin/entry`) is a three-tab application. Tabs are separated by job and
+frequency of use, and all tab content stays mounted (`forceMount`) so nothing typed is lost
+when switching tabs:
+
+| Tab | Job | Key elements |
+|---|---|---|
+| **Add Winner** | Create a new recognition (most frequent) | Guided 4-step flow, form with completion ticks, live email preview (renders from the unsaved form via `POST /admin/winners/preview`, debounced ~650ms), save + send |
+| **All Winners** | Manage existing records | Filter bar, master-detail list, inline edit with its own live preview, resend, hide (archive), Golden Ticket panel |
+| **Recipients** | Configure who receives emails (least frequent) | Add form, on/off switches, delete, live counts |
+
+The live preview is the centrepiece of the entry experience: it renders the real backend
+template from the in-progress payload before anything is saved, so what the user sees is
+always what will be sent.
+
+---
+
+## 13. Voice & Tone (UI copy)
+
+The portal is used by non-technical staff from every department. All UI copy must be:
+
+- **Plain** — no jargon. Say "Hide From Wall", not "Archive record"; "Who Gets The Emails",
+  not "Distribution list configuration". Domain words that staff already know (Golden Ticket,
+  Wall of Fame, Charter Champion) are fine.
+- **Direct** — lead with the action: "Fill in every field marked with a star (*)."
+- **Explanatory** — every screen says what it does and what happens next: "Nothing is sent
+  until you press send."
+- **Reassuring on errors** — error toasts say what failed and the next step: "Check the
+  Recipients tab, then try again."
+
+Avoid: record IDs as the primary label (use names), HTTP/status words, ALL-CAPS enum values
+in visible copy (translate `PUBLISHED` → "On the wall").
+
+---
+
+## 14. Border & Opacity Conventions
+
+Tailwind's colour opacity modifier only supports steps of 5 (`/5`, `/10`, ...). Values like
+`border-white/7` silently generate **no CSS** and the border falls back to Tailwind's default
+grey — this caused the original harsh borders. Therefore:
+
+- For subtle sub-10% opacities, always use bracket syntax: `border-white/[0.05]`,
+  `bg-white/[0.03]`, `border-gold/[0.08]`.
+- Standard surfaces: card border `white/[0.05]`, control border `white/[0.06]`, hover
+  `white/[0.10]–[0.12]`, dashed empty-state border `white/[0.09]`.
+- Gold accents may use scale values (`gold/15`, `gold/25`) since they sit on the 5-step scale.
+
+---
+
+## 15. Motion System (GSAP)
+
+CSS keyframes (§5) remain for the hero fade-ups and ambient orb drift. Everything data-driven
+or interactive is animated with **GSAP** through three shared hooks in
+`frontend/app/src/lib/animations.ts` — never with ad-hoc tweens in components:
+
+| Hook / helper | What it does | Where it is used |
+|---|---|---|
+| `useStaggerReveal(selector, deps)` | Stagger-reveals matching descendants (rise 26px, `power3.out`, 0.06s stagger) every time `deps` change | Wall of Fame card grids (re-runs on month/filter change), admin winner list, recipient rows, Add Winner mount |
+| `usePanelTransition(key)` | Fades/slides a container in when `key` changes | Admin tab switches (title block + panel), directory detail panel when a new winner is selected |
+| `popIn(el)` | Springy scale-in (`back.out(2.2)`) | Step-indicator circles the moment a step completes |
+
+Rules:
+
+- Durations 0.4–0.6s, eases `power2/power3.out` for movement, `back.out` only for
+  celebratory pops. No bounces on functional UI.
+- Every hook checks `prefers-reduced-motion` and skips (content appears instantly).
+- Element marking is via data attributes (`data-card`, `data-reveal`, `data-winner-item`,
+  `data-recipient-row`) so markup stays readable.
+- Buttons carry `active:scale-[0.97]` for press feedback; card hover lift stays CSS.
+
+## 16. Logo
+
+The official CWS mark (blue dashed-globe) lives at `frontend/app/public/brand/cws-logo.png`.
+
+- **Web**: `CwsLogoMark` renders it inside a white circular chip (so the blue mark keeps
+  contrast on dark backgrounds), sized sm/md/lg, with the wordmark alongside. Used across both
+  walls (`Header`) and the admin portal. It is also the browser favicon (`index.html`).
+- **Email**: each template masthead shows the logo via an **absolute URL** —
+  `{{ hall_of_fame_url }}/brand/cws-logo.png` (44×44, white rounded chip). Email clients cannot
+  load app-relative or `cid:` paths reliably, and they hide images until the recipient allows
+  them, so the text wordmark beside it remains the fallback. Never inline the logo as SVG in
+  email (clients strip SVG).
+
+## 17. Email Iconography — No Emoji, No SVG
+
+**Resolved July 2026.** Earlier templates used emoji (🏆 🤝 🎫) and later inline SVG for the
+Golden Ticket crown. Both fail widely: emoji render inconsistently and look informal; **inline
+SVG is stripped by Gmail, Outlook, and most clients** — that is why the crown "did not appear."
+
+The rule for all email decoration:
+
+- Use **plain-text dingbat glyphs** that render as font characters everywhere — e.g. `&#10038;`
+  (✶ six-pointed star) for ornaments and dividers. These are text, not images, so nothing can
+  strip them.
+- Convey emphasis with **HTML/CSS structure** (bordered circular medallions, gold rules,
+  letter-spaced labels, the "GT" monogram in Georgia serif) rather than iconography.
+- The only raster image in an email is the logo (§16), loaded by absolute URL with the text
+  masthead as fallback.
+
+## 18. Golden Ticket Email
+
+The Golden Ticket template (`backend/app/templates/emails/golden_ticket.html`) is the premium
+artefact of the system — a foil-and-navy "admit one" ticket:
+
+- Structure: foil gradient stripe → dark masthead (logo + "Admit One" stamp) → radial navy hero
+  with a **"GT" monogram medallion** (gold-ringed circle, Georgia serif, ✶ ornaments) and
+  occasion chip → perforated divider (dashed gold rule with rounded dark notches) → cream winner
+  stub (award-type bar, pillar/value twin panels, serif story quote) → navy CEO letter panel with
+  signature rule → gold CTA → uppercase footer strap.
+- All decoration follows §17 (text glyphs + CSS, no emoji, no SVG). Colours are solid hex with
+  gradient enhancements layered over `background` fallbacks, per §6 Outlook rules. Headings
+  Georgia serif; body Arial.
 
 ---
 

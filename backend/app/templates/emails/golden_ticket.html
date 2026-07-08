@@ -5,49 +5,133 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CWS Golden Ticket</title>
 </head>
-<body style="margin:0; padding:0; background:#1A2430; font-family:Arial, Helvetica, sans-serif; color:#2D3748;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1A2430; margin:0; padding:28px 12px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="680" cellpadding="0" cellspacing="0" style="width:680px; max-width:100%; background:#FFFFFF; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.50);">
-          <tr><td style="height:6px; background:#F5A623; line-height:6px; font-size:0;">&nbsp;</td></tr>
-          <tr>
-            <td style="background:#0A2240; padding:28px 36px 22px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td><div style="font-size:18px; line-height:22px; font-weight:700; letter-spacing:1.4px; color:#FFFFFF; text-transform:uppercase;">Cable &amp; Wireless Seychelles</div><div style="font-size:11px; line-height:16px; font-weight:700; letter-spacing:1.6px; color:#6B9DC0; text-transform:uppercase;">CWS Pulse Awards</div></td><td align="right"><span style="display:inline-block; border:1px solid #F5A623; border-radius:18px; padding:7px 14px; color:#F5A623; font-size:11px; line-height:14px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase;">Golden Ticket</span></td></tr></table>
+<body style="margin:0; padding:0; background:#0A0704; font-family:Arial, Helvetica, sans-serif; color:#2D3748;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0A0704; margin:0; padding:36px 12px;">
+    <tr><td align="center">
+
+      <table role="presentation" width="680" cellpadding="0" cellspacing="0" style="width:680px; max-width:100%; border-collapse:separate; border-spacing:0; border-radius:20px; overflow:hidden; box-shadow:0 30px 90px rgba(0,0,0,0.65); border:1px solid #A87E1F;">
+
+        <!-- Foil stripe -->
+        <tr><td style="height:6px; background:#D6A933; background:linear-gradient(90deg,#A87E1F 0%,#F7D88C 28%,#D6A933 52%,#F7D88C 76%,#A87E1F 100%); line-height:6px; font-size:0;">&nbsp;</td></tr>
+
+        <!-- Masthead -->
+        <tr><td style="background:#080D18; padding:26px 40px 22px; border-bottom:1px solid rgba(214,169,51,0.35);">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="width:58px; vertical-align:middle;">
+              <img src="{{ hall_of_fame_url }}/brand/cws-logo.png" alt="CWS logo" width="44" height="44" style="display:block; border:0; background:#FFFFFF; border-radius:50%; padding:4px;">
             </td>
-          </tr>
-          <tr>
-            <td align="center" style="background:#0D3060; padding:42px 36px 38px;">
-              <div style="font-size:50px; line-height:52px; margin-bottom:12px;">&#127915;</div>
-              <h1 style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:40px; line-height:44px; font-weight:700; color:#F5A623;">Golden Ticket Recognition</h1>
-              <p style="margin:14px auto 0; max-width:470px; font-size:15px; line-height:24px; color:#BDD3E8; font-style:italic;">A premium recognition for a story that deserves to be seen, shared, and celebrated.</p>
-              {% if occasion_label %}<div style="display:inline-block; margin-top:18px; border:1px solid #F5A623; border-radius:18px; padding:7px 16px; color:#F5A623; font-size:12px; line-height:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">{{ occasion_label }}</div>{% endif %}
+            <td style="vertical-align:middle;">
+              <div style="font-size:17px; line-height:22px; font-weight:700; letter-spacing:1.6px; color:#FFFFFF; text-transform:uppercase;">Cable &amp; Wireless Seychelles</div>
+              <div style="font-size:10px; line-height:16px; font-weight:700; letter-spacing:2.4px; color:#D6A933; text-transform:uppercase;">CWS Pulse Awards &mdash; Executive Series</div>
             </td>
-          </tr>
-          <tr>
-            <td style="padding:34px 36px 30px; background:#FFFFFF;">
-              <p style="margin:0 0 24px; font-size:15px; line-height:26px; color:#2D3748;">Congratulations to <strong style="color:#0A2240;">{{ winner_first_name }} {{ winner_last_name }}</strong>, selected for the <strong style="color:#F5A623;">CWS Golden Ticket</strong>.</p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #F5A623; border-radius:10px; overflow:hidden; border-collapse:separate; border-spacing:0;">
-                <tr><td style="background:#F5A623; padding:12px 20px; color:#0A2240; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;">{{ award_type_label }} &nbsp;|&nbsp; {{ subcategory }}</td></tr>
-                <tr>
-                  <td style="background:#FFF9EF; padding:24px 24px 22px;">
-                    <h2 style="margin:0 0 4px; font-family:Georgia, 'Times New Roman', serif; font-size:30px; line-height:34px; font-weight:700; color:#0A2240;">{{ winner_first_name }} {{ winner_last_name }}</h2>
-                    <p style="margin:0 0 18px; font-size:13px; line-height:20px; color:#6B8099;">{{ winner_job_title }} &mdash; {{ winner_department }}</p>
-                    <p style="margin:0 0 18px; font-size:12px; line-height:18px; color:#0A2240;"><strong>Pillar:</strong> {{ charter_pillar }} &nbsp;|&nbsp; <strong>Value:</strong> {{ company_value }}</p>
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF; border-left:4px solid #F5A623;"><tr><td style="padding:18px 20px;"><div style="font-family:Georgia, 'Times New Roman', serif; font-size:42px; line-height:28px; color:#E8870A;">&ldquo;</div><p style="margin:0; font-size:15px; line-height:26px; font-style:italic; color:#2D3748;">{{ story }}</p></td></tr></table>
-                    <p style="margin:18px 0 0; padding-top:14px; border-top:1px solid #F2D7A7; font-size:12px; line-height:18px; color:#6B8099;">Nominated by <strong style="color:#0A2240;">{{ nominated_by }}</strong> &nbsp;|&nbsp; {{ award_month }}</p>
-                  </td>
-                </tr>
-              </table>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px; background:#0A2240; border-radius:10px;"><tr><td style="padding:24px 26px;"><div style="font-family:Georgia, 'Times New Roman', serif; font-size:26px; line-height:26px; color:#F5A623;">&ldquo;</div><p style="margin:0; font-size:15px; line-height:26px; color:#FFFFFF;">{{ ceo_message }}</p><p style="margin:18px 0 0; font-size:13px; line-height:20px; color:#BDD3E8;"><strong style="color:#F5A623;">{{ ceo_name }}</strong><br>{{ ceo_title }}</p></td></tr></table>
-              <p style="margin:24px 0 0; font-size:12px; line-height:20px; color:#6B8099;">With recognition from {{ ccco_name }}, {{ ccco_title }}{% if chief_pc_name %}, and {{ chief_pc_name }}, {{ chief_pc_title }}{% endif %}.</p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px;"><tr><td align="center"><a href="{{ hall_of_fame_url }}" style="display:inline-block; background:#F5A623; color:#0A2240; text-decoration:none; padding:12px 24px; border-radius:8px; font-size:13px; line-height:16px; font-weight:700; letter-spacing:.4px;">Open Hall of Fame</a></td></tr></table>
+            <td align="right" style="vertical-align:middle;">
+              <span style="display:inline-block; border:1px solid #D6A933; border-radius:3px; padding:9px 14px; color:#F7D88C; font-size:10px; line-height:13px; font-weight:800; letter-spacing:3px; text-transform:uppercase;">Admit&nbsp;One</span>
             </td>
-          </tr>
-          <tr><td align="center" style="background:#0A2240; padding:18px 30px; color:#F5A623; font-size:11px; line-height:18px; letter-spacing:1px; text-transform:uppercase; font-weight:700;">Living the Charter. Leading the Techco.</td></tr>
-        </table>
-      </td>
-    </tr>
+          </tr></table>
+        </td></tr>
+
+        <!-- Hero -->
+        <tr><td align="center" style="background:#0A1526; background:radial-gradient(circle at 50% 0%, #142235 0%, #0A1526 62%); padding:52px 44px 46px;">
+          <!-- Crest medallion (pure HTML/CSS — email clients strip SVG) -->
+          <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 22px;"><tr>
+            <td align="center" style="width:84px; height:84px; border:1px solid #D6A933; border-radius:50%; background:rgba(214,169,51,0.08); box-shadow:0 0 0 6px rgba(214,169,51,0.07), 0 0 44px rgba(214,169,51,0.18);">
+              <div style="font-family:Georgia, 'Times New Roman', serif; font-size:26px; line-height:30px; font-weight:700; letter-spacing:2px; color:#F7D88C;">GT</div>
+              <div style="font-size:9px; line-height:11px; letter-spacing:3px; color:#D6A933; padding-left:3px;">&#10038;&nbsp;&#10038;&nbsp;&#10038;</div>
+            </td>
+          </tr></table>
+
+          <div style="font-size:10px; line-height:14px; font-weight:800; letter-spacing:4px; color:#D6A933; text-transform:uppercase; margin-bottom:12px;">By Invitation of the Chief Executive</div>
+          <h1 style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:42px; line-height:48px; font-weight:700; color:#F7D88C;">Golden Ticket Recognition</h1>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:18px auto 0;"><tr>
+            <td style="width:52px; height:1px; background:linear-gradient(90deg, rgba(214,169,51,0), #D6A933); font-size:0; line-height:1px;">&nbsp;</td>
+            <td style="padding:0 10px; color:#D6A933; font-size:14px; line-height:16px;">&#10038;</td>
+            <td style="width:52px; height:1px; background:linear-gradient(90deg, #D6A933, rgba(214,169,51,0)); font-size:0; line-height:1px;">&nbsp;</td>
+          </tr></table>
+
+          <p style="margin:16px auto 0; max-width:480px; font-family:Georgia, 'Times New Roman', serif; font-size:15px; line-height:26px; color:#EADFC4; font-style:italic;">An elevated recognition reserved for a standout story worthy of executive celebration.</p>
+
+          {% if occasion_label %}
+          <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:22px auto 0;"><tr>
+            <td style="border:1px solid rgba(247,216,140,0.65); border-radius:20px; padding:9px 18px; background:rgba(214,169,51,0.10);">
+              <span style="color:#D6A933; font-size:11px;">&#10038;</span>
+              <span style="color:#F7D88C; font-size:11px; line-height:15px; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:0 8px;">{{ occasion_label }}</span>
+              <span style="color:#D6A933; font-size:11px;">&#10038;</span>
+            </td>
+          </tr></table>
+          {% endif %}
+        </td></tr>
+
+        <!-- Perforation -->
+        <tr><td style="background:#FFFDF7; padding:0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td style="width:14px; background:#0A0704; border-radius:0 14px 14px 0; font-size:0; line-height:0;">&nbsp;</td>
+            <td style="border-top:2px dashed #D6A933; font-size:0; line-height:0; height:1px;">&nbsp;</td>
+            <td style="width:14px; background:#0A0704; border-radius:14px 0 0 14px; font-size:0; line-height:0;">&nbsp;</td>
+          </tr></table>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="padding:38px 40px 34px; background:#FFFDF7;">
+          <p style="margin:0 0 26px; font-size:15px; line-height:27px; color:#2D3748;">Congratulations to <strong style="color:#0A2240;">{{ winner_first_name }} {{ winner_last_name }}</strong>, selected for the <strong style="color:#B8860B;">CWS Golden Ticket</strong> following their {{ award_type_label }} recognition.</p>
+
+          <!-- Winner stub -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #D6A933; border-radius:14px; overflow:hidden; border-collapse:separate; border-spacing:0; box-shadow:0 14px 34px rgba(184,134,11,0.15);">
+            <tr><td style="background:#0A2240; padding:12px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="color:#F7D88C; font-size:10px; line-height:15px; font-weight:800; letter-spacing:2.2px; text-transform:uppercase;">{{ award_type_label }}</td>
+                <td align="right" style="color:#DDEBFA; font-size:10px; line-height:15px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase;">{{ subcategory }}</td>
+              </tr></table>
+            </td></tr>
+            <tr><td style="height:3px; background:#D6A933; background:linear-gradient(90deg,#A87E1F,#F7D88C,#A87E1F); font-size:0; line-height:3px;">&nbsp;</td></tr>
+            <tr><td style="background:#FFF9EF; padding:28px 28px 24px;">
+              <h2 style="margin:0 0 4px; font-family:Georgia, 'Times New Roman', serif; font-size:32px; line-height:38px; font-weight:700; color:#0A2240;">{{ winner_first_name }} {{ winner_last_name }}</h2>
+              <p style="margin:0 0 20px; font-size:13px; line-height:20px; color:#6B8099;">{{ winner_job_title }} &mdash; {{ winner_department }}</p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;"><tr>
+                <td style="width:50%; padding:12px 16px; background:#FFFFFF; border:1px solid #F2D7A7; border-radius:10px 0 0 10px;">
+                  <div style="font-size:9px; line-height:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#B8860B; margin-bottom:4px;">Charter Pillar</div>
+                  <div style="font-size:12.5px; line-height:19px; color:#0A2240; font-weight:600;">{{ charter_pillar }}</div>
+                </td>
+                <td style="width:50%; padding:12px 16px; background:#FFFFFF; border:1px solid #F2D7A7; border-left:none; border-radius:0 10px 10px 0;">
+                  <div style="font-size:9px; line-height:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#B8860B; margin-bottom:4px;">Company Value</div>
+                  <div style="font-size:12.5px; line-height:19px; color:#0A2240; font-weight:600;">{{ company_value }}</div>
+                </td>
+              </tr></table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF; border-left:4px solid #D6A933; box-shadow:0 4px 14px rgba(184,134,11,0.08);"><tr><td style="padding:22px 24px;">
+                <div style="font-family:Georgia, 'Times New Roman', serif; font-size:44px; line-height:26px; color:#D6A933;">&ldquo;</div>
+                <p style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:16px; line-height:28px; font-style:italic; color:#2D3748;">{{ story }}</p>
+              </td></tr></table>
+
+              <p style="margin:20px 0 0; padding-top:14px; border-top:1px solid #F2D7A7; font-size:12px; line-height:18px; color:#6B8099;">Nominated by <strong style="color:#0A2240;">{{ nominated_by }}</strong> &nbsp;&middot;&nbsp; {{ award_month }}</p>
+            </td></tr>
+          </table>
+
+          <!-- CEO letter -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px; background:#0A1526; background:radial-gradient(circle at 100% 0%, #13233A 0%, #0A1526 58%); border-radius:14px; border:1px solid rgba(214,169,51,0.55); border-collapse:separate; border-spacing:0; overflow:hidden;">
+            <tr><td style="padding:30px 32px 28px;">
+              <div style="font-size:10px; line-height:14px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#D6A933; margin-bottom:14px;">A Personal Word</div>
+              <p style="margin:0; font-family:Georgia, 'Times New Roman', serif; font-size:16px; line-height:29px; font-style:italic; color:#F4EFE2;">&ldquo;{{ ceo_message }}&rdquo;</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:22px;"><tr>
+                <td style="width:34px; border-top:1px solid #D6A933; font-size:0; line-height:0;">&nbsp;</td>
+              </tr></table>
+              <p style="margin:12px 0 0; font-size:13px; line-height:20px; color:#DDEBFA;"><strong style="color:#F7D88C; font-size:15px; font-family:Georgia, 'Times New Roman', serif;">{{ ceo_name }}</strong><br>{{ ceo_title }}</p>
+            </td></tr>
+          </table>
+
+          <p style="margin:22px 0 0; font-size:12px; line-height:20px; color:#6B8099;">With recognition from {{ ccco_name }}, {{ ccco_title }}{% if chief_pc_name %}, and {{ chief_pc_name }}, {{ chief_pc_title }}{% endif %}.</p>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px;"><tr><td align="center">
+            <a href="{{ hall_of_fame_url }}" style="display:inline-block; background:#D6A933; background:linear-gradient(135deg,#B8860B,#D6A933); color:#0A2240; text-decoration:none; padding:14px 30px; border-radius:9px; font-size:13px; line-height:16px; font-weight:800; letter-spacing:1px; text-transform:uppercase; box-shadow:0 8px 24px rgba(184,134,11,0.35);">Open Hall of Fame</a>
+          </td></tr></table>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td align="center" style="background:#080D18; padding:20px 32px; border-top:1px solid rgba(214,169,51,0.35); color:#D6A933; font-size:10px; line-height:18px; letter-spacing:2.4px; text-transform:uppercase; font-weight:800;">Golden Ticket honour &nbsp;&middot;&nbsp; Exceptional impact &nbsp;&middot;&nbsp; Executive recognition</td></tr>
+      </table>
+
+    </td></tr>
   </table>
 </body>
 </html>

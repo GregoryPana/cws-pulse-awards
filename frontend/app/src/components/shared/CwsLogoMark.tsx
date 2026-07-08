@@ -6,17 +6,17 @@ interface Props {
 
 const sizeStyles = {
   sm: {
-    mark: 'h-9 w-16 text-lg',
+    mark: 'h-9 w-9 p-1',
     name: 'text-[10px]',
     subtitle: 'text-[10px]',
   },
   md: {
-    mark: 'h-11 w-[76px] text-xl',
+    mark: 'h-11 w-11 p-1.5',
     name: 'text-xs',
     subtitle: 'text-[11px]',
   },
   lg: {
-    mark: 'h-14 w-24 text-2xl',
+    mark: 'h-14 w-14 p-2',
     name: 'text-sm',
     subtitle: 'text-xs',
   },
@@ -24,11 +24,11 @@ const sizeStyles = {
 
 const variantStyles = {
   blue: {
-    mark: 'border-sky/35 bg-blue/20 text-sky shadow-[0_0_0_6px_rgba(0,112,192,.14),0_16px_38px_rgba(0,112,192,.18)]',
+    mark: 'border-sky/35 shadow-[0_0_0_6px_rgba(0,112,192,.14),0_16px_38px_rgba(0,112,192,.18)]',
     name: 'text-sky',
   },
   gold: {
-    mark: 'border-gold/35 bg-gold/15 text-gold shadow-[0_0_0_6px_rgba(245,166,35,.12),0_16px_38px_rgba(245,166,35,.18)]',
+    mark: 'border-gold/35 shadow-[0_0_0_6px_rgba(245,166,35,.12),0_16px_38px_rgba(245,166,35,.18)]',
     name: 'text-gold',
   },
 }
@@ -40,10 +40,13 @@ export default function CwsLogoMark({ variant = 'gold', size = 'md', showName = 
   return (
     <div className="flex items-center gap-3.5">
       <div
-        className={`${sizes.mark} ${colours.mark} flex shrink-0 items-center justify-center rounded-btn border font-display font-black tracking-[-0.08em]`}
-        aria-label="CWS logo"
+        className={`${sizes.mark} ${colours.mark} flex shrink-0 items-center justify-center rounded-full border bg-white`}
       >
-        CWS
+        <img
+          src="/brand/cws-logo.png"
+          alt="Cable & Wireless Seychelles logo"
+          className="h-full w-full object-contain"
+        />
       </div>
       {showName && (
         <div className="min-w-0">
