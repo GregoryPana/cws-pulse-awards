@@ -1,0 +1,111 @@
+name: deploy-staging
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: staging-ci-test-password
+      DATABASE_URL: postgresql+asyncpg://pulse:staging-ci-test-password@127.0.0.1:5433/pulse_awards
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend and sidecar dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt -r pdf_service/requirements.txt
+
+      - name: Start Phase 0 support services
+        run: docker compose up -d --build
+
+      - name: Wait for compose health checks
+        run: |
+          for attempt in {1..30}; do
+            if docker compose ps --format json | grep '"Health":"healthy"' >/dev/null; then
+              count=$(docker compose ps --format json | grep -c '"Health":"healthy"')
+              if [ "$count" -ge 2 ]; then
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          docker compose ps
+          exit 1
+
+      - name: Apply Alembic migration
+        working-directory: backend
+        run: python -m alembic upgrade head
+
+      - name: Run backend and sidecar tests
+        run: python -m pytest backend/tests
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/app/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend/app
+        run: npm ci
+
+      - name: Typecheck frontend
+        working-directory: frontend/app
+        run: npx tsc --noEmit
+
+      - name: Build frontend
+        working-directory: frontend/app
+        run: npm run build
+
+  deploy:
+    needs: ci
+    runs-on: [self-hosted, linux, pulse-awards, staging]
+    environment: staging
+    env:
+      APP_NAME: pulse-awards
+      APP_ROOT: ${{ vars.APP_ROOT || '/opt/pulse-awards' }}
+      BACKEND_PORT: ${{ vars.BACKEND_PORT || '8000' }}
+      DB_PORT: ${{ vars.DB_PORT || '5433' }}
+      PDF_PORT: ${{ vars.PDF_PORT || '8001' }}
+      SERVER_NAME: ${{ vars.SERVER_NAME || 'pulse.cwsey.com' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: true
+
+      - name: Harden workspace to exact commit
+        run: |
+          git fetch --prune --tags
+          git checkout --force "$GITHUB_SHA"
+          git clean -ffdx
+
+      - name: Check for port conflicts with other apps on this VM
+        run: ./scripts/linux/check_ports.sh
+
+      - name: Build release bundle
+        run: ./scripts/linux/build_release_bundle.sh
+
+      - name: Install release bundle
+        run: ./scripts/linux/install_release_bundle.sh
+
+      - name: Deploy backend
+        run: ./scripts/linux/deploy_backend.sh
+
+      - name: Deploy frontend
+        run: ./scripts/linux/deploy_frontends.sh
+
+      - name: Deploy NGINX
+        run: ./scripts/linux/deploy_nginx.sh
+
+      - name: Verify release
+        run: ./scripts/linux/verify_release.sh staging

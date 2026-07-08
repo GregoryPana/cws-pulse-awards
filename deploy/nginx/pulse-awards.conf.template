@@ -1,0 +1,58 @@
+# CWS Pulse Awards — NGINX site config template.
+# Rendered by scripts/linux/deploy_nginx.sh (placeholders substituted from
+# environment variables), then installed to
+# /etc/nginx/sites-available/pulse-awards.conf.
+#
+# Adapted from docs/01-standards/internal-dev-kit/templates/nginx/app.conf.template
+# — Pulse Awards has a single frontend (no separate dashboard SPA), so the
+# /dashboard/ location block from the generic template is dropped here.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __SERVER_NAME__;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name __SERVER_NAME__;
+
+    ssl_certificate __SSL_CERT__;
+    ssl_certificate_key __SSL_KEY__;
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header Referrer-Policy no-referrer-when-downgrade always;
+
+    location = / {
+        return 302 /charter-champions;
+    }
+
+    location /brand/ {
+        alias __APP_ROOT__/frontend-dist/brand/;
+        add_header Cache-Control "public, max-age=86400" always;
+    }
+
+    location /api/ {
+        proxy_pass __BACKEND_UPSTREAM__/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        proxy_connect_timeout 10s;
+    }
+
+    location / {
+        root __APP_ROOT__/frontend-dist;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+    }
+}

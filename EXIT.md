@@ -38,13 +38,20 @@ Current status: **Phase 0 baseline verified locally / not production-ready**.
 
 ## 4. Repository And Deployment
 
-- Repository URL: To be created/confirmed; no remote currently configured in local workspace.
-- Default branch: `main` once remote is created.
-- Current working branch: `feature/phase-0-foundation` locally.
-- Current CI/CD platform: GitHub Actions baseline workflow in `.github/workflows/ci.yml`.
-- Staging deploy workflow/job: Not yet created; must follow INTERNAL DEV KIT self-hosted runner model.
-- Production deploy workflow/job: Not yet created; must be manual and self-hosted-runner based.
-- Self-hosted runner names/labels: To be confirmed.
+- Repository URL: `https://github.com/GregoryPana/cws-pulse-awards`
+- Default branch: `feature/phase-0-foundation` (not yet renamed to `main`).
+- Current working branch: `feature/phase-0-foundation`.
+- Current CI/CD platform: GitHub Actions. Baseline test workflow in `.github/workflows/ci.yml`;
+  deploy workflows in `.github/workflows/deploy-staging.yml` and `deploy-production.yml`.
+- Staging deploy workflow/job: `deploy-staging.yml` — `workflow_dispatch`, runs the backend/
+  frontend test+build gate, then deploys via `scripts/linux/*.sh` on the self-hosted runner.
+- Production deploy workflow/job: `deploy-production.yml` — identical structure, gated by the
+  `production` GitHub Environment's required-reviewer protection rule (must be configured in
+  repo Settings — the workflow YAML alone is not the approval gate).
+- Self-hosted runner names/labels: one runner today, `pulse-awards-runner-01`, labels
+  `self-hosted,linux,pulse-awards,staging,production` — see
+  `docs/deployment/self-hosted-runner-setup.md` for the full setup and the plan for splitting
+  onto a separate production VM later.
 
 ## 5. Runtime Paths
 
@@ -169,7 +176,7 @@ sudo nginx -t && sudo systemctl reload nginx
 ## 12. Handover Status
 
 - [ ] Phase 0 approved by Gregory.
-- [ ] GitHub remote created and branch pushed.
+- [x] GitHub remote created and branch pushed.
 - [ ] CI baseline checks passing in GitHub Actions.
 - [ ] Staging deployment verified.
 - [ ] Production deployment verified.
@@ -182,9 +189,15 @@ sudo nginx -t && sudo systemctl reload nginx
 ## 13. Open Items Before Production Handover
 
 - Complete approved Phase 0 review against the verified local baseline.
-- Create/confirm GitHub private repo remote.
-- Extend CI/CD from baseline checks to approved deploy workflows after Phase 0 approval.
-- Complete NGINX config and deployment scripts.
+- ~~Create/confirm GitHub private repo remote.~~ Done — see §4.
+- Register the self-hosted runner on `cwscx-tst01` per
+  `docs/deployment/self-hosted-runner-setup.md` (not yet performed on the actual VM).
+- Configure the `staging` and `production` GitHub Environments (variables + production's
+  required-reviewer rule) per §7 of the runner setup guide.
+- Run `deploy-staging.yml` for the first time and confirm `scripts/linux/verify_release.sh`
+  passes end-to-end against the real VM.
+- Provision the self-signed TLS certificate at `/etc/ssl/pulse-awards/` before the first
+  `deploy_nginx.sh` run.
 - Complete frontend and admin workflows in later phases.
 - Replace email templates with reviewed MJML-derived production templates.
 - Complete backup/restore scripts and tests.
