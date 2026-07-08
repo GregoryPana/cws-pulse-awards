@@ -73,6 +73,18 @@ npm run build
   `.env` change (env values are read once at startup).
 - **Port 5173 already in use** — a previous Vite is still running; kill it or Vite will move
   to 5174 (and the printed URL will say so).
+- **A Tailwind colour/class change doesn't show up (e.g. text renders invisible/transparent,
+  or a border stays default grey) even after saving the file** — same stale-process pattern as
+  the backend one above, but on the frontend: an orphaned `npm run dev` from an earlier session
+  keeps serving pre-change CSS. Undefined Tailwind classes (from a colour that didn't exist yet
+  when that stale process last compiled) fail silently rather than erroring, which is why this
+  is easy to mistake for an app bug. Fix:
+  ```powershell
+  Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force
+  ```
+  then `rm -rf frontend/app/node_modules/.vite` and restart `npm run dev`. Afterwards, **hard-refresh
+  the browser** (Ctrl+Shift+R) — restarting the server breaks the old HMR connection, and a normal
+  refresh can still reuse a stale cached module graph from before the restart.
 - **Email "send" fails** — the SMTP host (`SMTP_HOST` in `.env`) must be reachable from your
   machine; previews work regardless.
 - **Logo or Golden Ticket image missing in a downloaded certificate PDF, but fine in the
