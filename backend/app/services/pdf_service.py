@@ -28,3 +28,16 @@ async def request_placeholder_pdf() -> bytes:
         )
         response.raise_for_status()
         return response.content
+
+
+async def render_certificate_pdf(html: str, filename: str, *, landscape: bool = True) -> bytes:
+    """Render a winner certificate to PDF bytes via the Playwright sidecar."""
+
+    settings = get_settings()
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            f"{settings.pdf_service_url}/generate",
+            json={"html": html, "filename": filename, "landscape": landscape},
+        )
+        response.raise_for_status()
+        return response.content

@@ -11,12 +11,13 @@ class GenerateRequest(BaseModel):
 
     html: str
     filename: str
+    landscape: bool = False
 
 
 app = FastAPI(title="Pulse Awards PDF Service", version="0.1.0")
 
 
-async def render_pdf(html: str) -> bytes:
+async def render_pdf(html: str, landscape: bool = False) -> bytes:
     """Render HTML to PDF bytes with headless Chromium."""
 
     async with async_playwright() as playwright:
@@ -24,7 +25,7 @@ async def render_pdf(html: str) -> bytes:
         try:
             page = await browser.new_page()
             await page.set_content(html, wait_until="networkidle")
-            return await page.pdf(format="A4", print_background=True)
+            return await page.pdf(format="A4", print_background=True, landscape=landscape)
         finally:
             await browser.close()
 
@@ -41,4 +42,5 @@ async def generate_pdf(request: GenerateRequest) -> Response:
     """Render the supplied HTML into a print-ready PDF."""
 
     headers = {"Content-Disposition": f'attachment; filename="{request.filename}"'}
-    return Response(content=await render_pdf(request.html), media_type="application/pdf", headers=headers)
+    pdf_bytes = await render_pdf(request.html, landscape=request.landscape)
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)

@@ -5,10 +5,12 @@ interface Props {
   variant: 'blue' | 'gold' | 'golden'
 }
 
-/* 'golden' is the full-brightness treatment reserved for Golden Ticket cards. */
+/* 'golden' is the full-brightness gold treatment reserved for Golden Ticket cards.
+   'gold' (used on standard Instant Impact cards) is the wall's own coral/crimson accent —
+   named for historical reasons but deliberately not gold-coloured, so it reads distinct. */
 const styles: Record<string, string> = {
   blue: 'bg-gold/10 border-gold/25 text-gold-soft',
-  gold: 'bg-amber/[0.08] border-amber/25 text-[#F5B968]',
+  gold: 'bg-impact/[0.08] border-impact/25 text-impact-soft',
   golden: 'bg-gold/15 border-gold/40 text-gold-soft',
 }
 

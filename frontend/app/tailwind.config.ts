@@ -18,6 +18,12 @@ export default {
         gold: '#F5A623',
         'gold-soft': '#FFD166',
         amber: '#E8870A',
+        // Instant Impact's own accent — an emerald/teal green, distinct from both
+        // Charter Champion's blue and the Golden Ticket's foil gold (July 2026,
+        // revised from an earlier coral/red that read too muted on white/cream).
+        impact: '#10B981',
+        'impact-soft': '#34D399',
+        'impact-deep': '#047857',
         'mid-gray': '#6B8099',
         'dark-gray': '#2D3748',
         mist: 'rgba(255,255,255,0.06)',

@@ -9,7 +9,7 @@ interface Props {
 
 const focusStyles: Record<string, string> = {
   blue: 'focus:border-blue focus:ring-blue/20',
-  gold: 'focus:border-gold focus:ring-gold/20',
+  gold: 'focus:border-impact focus:ring-impact/20',
 }
 
 export default function HallFilters({

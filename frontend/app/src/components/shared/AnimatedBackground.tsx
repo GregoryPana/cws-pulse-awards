@@ -14,11 +14,11 @@ const orbStyles: Record<Variant, { grid: string; orbs: { size: string; pos: stri
     ],
   },
   gold: {
-    grid: 'rgba(245,166,35,.04)',
+    grid: 'rgba(232,72,60,.045)',
     orbs: [
-      { size: '600px', pos: 'top-[-200px] right-[-150px]', bg: 'rgba(245,132,35,.10)', delay: '0s' },
-      { size: '450px', pos: 'bottom-[-120px] left-[-100px]', bg: 'rgba(0,112,192,.12)', delay: '-7s' },
-      { size: '250px', pos: 'top-[45%] left-[42%]', bg: 'rgba(245,166,35,.08)', delay: '-14s' },
+      { size: '600px', pos: 'top-[-200px] right-[-150px]', bg: 'rgba(232,72,60,.11)', delay: '0s' },
+      { size: '450px', pos: 'bottom-[-120px] left-[-100px]', bg: 'rgba(0,112,192,.10)', delay: '-7s' },
+      { size: '250px', pos: 'top-[45%] left-[42%]', bg: 'rgba(166,43,31,.10)', delay: '-14s' },
     ],
   },
 }

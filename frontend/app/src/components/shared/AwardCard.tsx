@@ -13,42 +13,42 @@ interface Props {
 }
 
 /*
- * Standard Instant Impact cards deliberately sit in a deeper amber/bronze register.
- * The bright gold-soft foil treatment is reserved for Golden Ticket cards only,
- * so they remain unmistakable on the gold wall.
+ * Standard Instant Impact cards use the wall's own coral/crimson accent (§ tailwind
+ * `impact` colours) — deliberately NOT gold, so the wall reads clearly distinct from
+ * the Golden Ticket's foil gold treatment below.
  */
 const cardBarGradients: Record<string, string> = {
   peer: 'bg-gradient-to-r from-blue to-sky',
   manager: 'bg-gradient-to-r from-navy to-blue',
-  impact: 'bg-gradient-to-r from-[#8A5A08] to-amber',
+  impact: 'bg-gradient-to-r from-impact-deep to-impact',
   goldenTicket: 'bg-gradient-to-r from-amber via-gold to-gold-soft',
 }
 
-/* Hover glow is themed to the wall the card sits on: sky for Charter Champions, muted amber for Instant Impact. */
+/* Hover glow is themed to the wall the card sits on: sky for Charter Champions, coral for Instant Impact. */
 const cardHoverGlow: Record<string, string> = {
   blue: 'hover:shadow-[0_26px_64px_rgba(0,0,0,.45),0_0_36px_rgba(0,163,217,.22),0_0_0_1px_rgba(0,163,217,.35)]',
-  gold: 'hover:shadow-[0_26px_64px_rgba(0,0,0,.5),0_0_26px_rgba(232,135,10,.14),0_0_0_1px_rgba(232,135,10,.26)]',
+  gold: 'hover:shadow-[0_26px_64px_rgba(0,0,0,.5),0_0_26px_rgba(232,72,60,.16),0_0_0_1px_rgba(232,72,60,.28)]',
 }
 
 const cardHoverStrip: Record<string, string> = {
   blue: 'bg-gradient-to-r from-blue via-sky to-gold',
-  gold: 'bg-gradient-to-r from-[#8A5A08] via-amber to-gold',
+  gold: 'bg-gradient-to-r from-impact-deep via-impact to-impact-soft',
 }
 
 const cardBg: Record<string, string> = {
   blue: 'bg-gradient-to-br from-[#0B1C30]/95 to-[#061426]/95 border border-white/[0.07] shadow-xl shadow-black/20',
-  gold: 'bg-gradient-to-br from-[#0B1C30]/95 to-[#140F08]/95 border border-amber/[0.10] shadow-xl shadow-black/20',
+  gold: 'bg-gradient-to-br from-[#0B1C30]/95 to-[#1A0E0C]/95 border border-impact/[0.12] shadow-xl shadow-black/20',
 }
 
 const storyQuoteColor: Record<string, string> = {
   blue: 'text-blue/50',
-  gold: 'text-amber/40',
+  gold: 'text-impact/45',
 }
 
 /* Constant border-trace beam, themed per wall. */
 const traceStyle: Record<string, CSSProperties> = {
   blue: { '--trace-color': 'rgba(0,163,217,0.75)', '--trace-duration': '9s' } as CSSProperties,
-  gold: { '--trace-color': 'rgba(232,135,10,0.65)', '--trace-duration': '9s' } as CSSProperties,
+  gold: { '--trace-color': 'rgba(232,72,60,0.7)', '--trace-duration': '9s' } as CSSProperties,
 }
 
 /** Light band that sweeps across a card once on hover. */
@@ -194,7 +194,7 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
         className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${
           variant === 'blue'
             ? 'bg-[radial-gradient(circle_at_top_right,rgba(0,163,217,0.13),transparent_36%)]'
-            : 'bg-[radial-gradient(circle_at_top_right,rgba(232,135,10,0.11),transparent_36%)]'
+            : 'bg-[radial-gradient(circle_at_top_right,rgba(232,72,60,0.13),transparent_36%)]'
         }`}
       />
       <div className={`h-1 ${cardBarGradients[cardVariant]}`} />

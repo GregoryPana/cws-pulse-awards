@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Archive, Check, RefreshCw, Save, Send, Ticket, Users } from 'lucide-react'
+import { Archive, Check, Download, RefreshCw, Save, Send, Ticket, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePanelTransition, useStaggerReveal } from '../../../lib/animations'
+import { downloadBlob } from '../../../lib/utils'
 import {
   archiveWinner,
   fetchAdminWinners,
+  fetchAwardCertificate,
+  fetchGoldenTicketCertificate,
   fetchGoldenTicketEmailPreview,
   markGoldenTicket,
   sendAwardEmail,
@@ -71,6 +74,8 @@ export default function WinnerDirectoryTab({ isSignedIn, getAccessToken }: Admin
   const [isResending, setIsResending] = useState(false)
   const [isGoldenSaving, setIsGoldenSaving] = useState(false)
   const [isGoldenSending, setIsGoldenSending] = useState(false)
+  const [isDownloadingCertificate, setIsDownloadingCertificate] = useState(false)
+  const [isDownloadingGoldenCertificate, setIsDownloadingGoldenCertificate] = useState(false)
 
   const config = useAwardConfig(editPayload?.award_type ?? 'CHARTER_CHAMPION')
   const { preview, isRendering } = useLivePreview(
@@ -193,6 +198,46 @@ export default function WinnerDirectoryTab({ isSignedIn, getAccessToken }: Admin
     }
   }
 
+  const handleDownloadCertificate = async () => {
+    if (!selected) return
+    setIsDownloadingCertificate(true)
+
+    try {
+      const token = await getAccessToken()
+      const { blob, filename } = await fetchAwardCertificate(selected.id, token)
+      downloadBlob(blob, filename)
+      toast.success('Certificate downloaded', {
+        description: 'The print-ready PDF has been saved to your downloads.',
+      })
+    } catch (err) {
+      toast.error('Could not create the certificate', {
+        description: err instanceof Error ? err.message : 'Please try again.',
+      })
+    } finally {
+      setIsDownloadingCertificate(false)
+    }
+  }
+
+  const handleDownloadGoldenTicketCertificate = async () => {
+    if (!selected) return
+    setIsDownloadingGoldenCertificate(true)
+
+    try {
+      const token = await getAccessToken()
+      const { blob, filename } = await fetchGoldenTicketCertificate(selected.id, token)
+      downloadBlob(blob, filename)
+      toast.success('Golden Ticket certificate downloaded', {
+        description: 'The print-ready PDF has been saved to your downloads.',
+      })
+    } catch (err) {
+      toast.error('Could not create the Golden Ticket certificate', {
+        description: err instanceof Error ? err.message : 'Please try again.',
+      })
+    } finally {
+      setIsDownloadingGoldenCertificate(false)
+    }
+  }
+
   const handleSaveGoldenTicket = async () => {
     if (!selected) return
     setIsGoldenSaving(true)
@@ -239,7 +284,14 @@ export default function WinnerDirectoryTab({ isSignedIn, getAccessToken }: Admin
     }
   }
 
-  const anyBusy = isSavingEdit || isArchiving || isResending || isGoldenSaving || isGoldenSending
+  const anyBusy =
+    isSavingEdit ||
+    isArchiving ||
+    isResending ||
+    isGoldenSaving ||
+    isGoldenSending ||
+    isDownloadingCertificate ||
+    isDownloadingGoldenCertificate
   const periodOptions = [
     { value: 'ALL', label: 'All months' },
     ...MONTHS_SHORT.map((month, index) => ({ value: month, label: FULL_MONTHS[index] })),
@@ -259,8 +311,8 @@ export default function WinnerDirectoryTab({ isSignedIn, getAccessToken }: Admin
                 onValueChange={(value) => setAwardTypeFilter(value as AwardTypeFilter)}
                 options={[
                   { value: 'ALL', label: 'All award types' },
-                  { value: 'CHARTER_CHAMPION', label: 'Charter Champion' },
-                  { value: 'INSTANT_IMPACT', label: 'Instant Impact' },
+                  { value: 'CHARTER_CHAMPION', label: 'Charter Champion — Peer-to-Peer' },
+                  { value: 'INSTANT_IMPACT', label: 'Instant Impact — Manager-to-Staff' },
                 ]}
               />
               <SelectField
@@ -388,6 +440,16 @@ export default function WinnerDirectoryTab({ isSignedIn, getAccessToken }: Admin
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => void handleDownloadCertificate()}
+                      disabled={anyBusy}
+                      title="Download a print-ready certificate PDF for this winner"
+                    >
+                      {isDownloadingCertificate ? <Spinner className="h-3.5 w-3.5" /> : <Download className="h-3.5 w-3.5" />}
+                      Download Certificate
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => void handleResend()}
                       disabled={anyBusy || selected.status !== 'PUBLISHED'}
                       title={selected.status !== 'PUBLISHED' ? 'Only published winners can receive emails' : undefined}
@@ -462,10 +524,26 @@ export default function WinnerDirectoryTab({ isSignedIn, getAccessToken }: Admin
                     </CardDescription>
                   </div>
                   {selected.golden_ticket && (
-                    <Badge>
-                      <Ticket className="h-3 w-3" />
-                      Has a Golden Ticket
-                    </Badge>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge>
+                        <Ticket className="h-3 w-3" />
+                        Has a Golden Ticket
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void handleDownloadGoldenTicketCertificate()}
+                        disabled={anyBusy}
+                        title="Download a print-ready Golden Ticket certificate PDF"
+                      >
+                        {isDownloadingGoldenCertificate ? (
+                          <Spinner className="h-3.5 w-3.5" />
+                        ) : (
+                          <Download className="h-3.5 w-3.5" />
+                        )}
+                        Download Certificate
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
@@ -530,8 +608,8 @@ export default function WinnerDirectoryTab({ isSignedIn, getAccessToken }: Admin
                 Pick a winner from the list
               </p>
               <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-white/45">
-                Once you pick someone you can change their details, send their email again,
-                hide them from the Wall of Fame, or send them a Golden Ticket.
+                Once you pick someone you can change their details, download their certificate,
+                send their email again, hide them from the Wall of Fame, or send them a Golden Ticket.
               </p>
               <Button
                 variant="secondary"

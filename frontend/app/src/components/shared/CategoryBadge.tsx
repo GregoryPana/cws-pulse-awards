@@ -5,12 +5,12 @@ interface Props {
   variant: 'peer' | 'manager' | 'impact' | 'gold'
 }
 
-/* 'impact' is the muted amber used on standard Instant Impact cards;
-   bright 'gold' (with Sparkles) is reserved for Golden Ticket cards. */
+/* 'impact' is the coral/crimson used on standard Instant Impact cards — deliberately
+   distinct from 'gold' (with Sparkles), reserved for Golden Ticket cards. */
 const styles: Record<string, string> = {
   peer: 'bg-blue/20 text-sky border-sky/30',
   manager: 'bg-blue/15 text-[#60C4F0] border-blue/30',
-  impact: 'bg-amber/15 text-[#F5B968] border-amber/40',
+  impact: 'bg-impact/15 text-impact-soft border-impact/40',
   gold: 'bg-gold/15 text-gold-soft border-gold/30',
 }
 

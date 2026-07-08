@@ -52,10 +52,11 @@ def test_pdf_sidecar_generate_returns_pdf_response(monkeypatch) -> None:
 
     module = load_pdf_sidecar_module()
 
-    async def fake_render_pdf(html: str) -> bytes:
+    async def fake_render_pdf(html: str, landscape: bool = False) -> bytes:
         """Return deterministic PDF bytes without launching Chromium."""
 
         assert html == "<html><body><h1>Pulse Awards</h1></body></html>"
+        assert landscape is False
         return b"%PDF-test"
 
     monkeypatch.setattr(module, "render_pdf", fake_render_pdf)

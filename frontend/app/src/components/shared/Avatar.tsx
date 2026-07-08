@@ -12,12 +12,12 @@ const initials = (first: string, last: string) =>
 
 const gradients: Record<string, string> = {
   blue: 'bg-gradient-to-br from-blue to-sky',
-  gold: 'bg-gradient-to-br from-amber to-gold',
+  gold: 'bg-gradient-to-br from-impact-deep to-impact',
 }
 
 const textColors: Record<string, string> = {
   blue: 'text-white',
-  gold: 'text-navy',
+  gold: 'text-white',
 }
 
 export default function Avatar({

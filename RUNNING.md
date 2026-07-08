@@ -1,11 +1,12 @@
 # Running Pulse Awards Locally
 
-Three pieces need to be running: the **Postgres database** (Docker), the **backend API**
-(FastAPI on port 8000), and the **frontend** (Vite on port 5173).
+Four pieces need to be running: the **Postgres database** (Docker), the **PDF sidecar**
+(Docker, Playwright/Chromium), the **backend API** (FastAPI on port 8000), and the
+**frontend** (Vite on port 5173).
 
 ## Prerequisites (one-time)
 
-- Docker Desktop running (for the `pulse_db` Postgres container)
+- Docker Desktop running (for the `pulse_db` and `pulse_playwright` containers)
 - Python 3.12 with the backend dependencies installed (`backend/venv` already exists)
 - Node.js 18+ with frontend dependencies installed:
   ```powershell
@@ -18,12 +19,16 @@ Three pieces need to be running: the **Postgres database** (Docker), the **backe
   - `frontend/app/.env.local` contains `VITE_DEV_AUTH_ENABLED=true` — the frontend skips
     MSAL and sends that test token.
   - Never enable either flag in production.
+  - `APP_BASE_URL` / `PDF_ASSET_BASE_URL` in `.env` point emails and certificate PDFs at
+    the logo and Golden Ticket artwork — see §16–17 of `DESIGN_SYSTEM.md` if images don't
+    appear.
 
-## Start everything (three terminals)
+## Start everything (four terminals)
 
-**1. Database**
+**1. Database + PDF sidecar**
 ```powershell
 docker start pulse_db
+docker start pulse_playwright
 ```
 
 **2. Backend API** (from the repo root)
@@ -70,3 +75,31 @@ npm run build
   to 5174 (and the printed URL will say so).
 - **Email "send" fails** — the SMTP host (`SMTP_HOST` in `.env`) must be reachable from your
   machine; previews work regardless.
+- **Logo or Golden Ticket image missing in a downloaded certificate PDF, but fine in the
+  browser preview** — the PDF sidecar (`pulse_playwright`) runs in its own Docker container
+  with its own network namespace, so it cannot reach `127.0.0.1:5173` the way your browser
+  can. It uses `PDF_ASSET_BASE_URL` (`http://host.docker.internal:5173` locally) instead.
+  This requires Vite to accept that host — already set in `vite.config.ts`
+  (`server.host: true`, `server.allowedHosts: ['host.docker.internal']`). If you changed
+  that file, restart Vite. See `DESIGN_SYSTEM.md` §17 for the full explanation.
+- **Certificate download returns a 502** — the PDF sidecar isn't running or was rebuilt
+  after a `pdf_service/pdf_service.py` change without recreating the container:
+  ```powershell
+  docker compose build playwright
+  docker compose up -d playwright
+  ```
+  (the sidecar's code is baked into its image, not live-mounted, so edits need a rebuild).
+- **A backend code change (new route, new template variable, new setting) doesn't seem to
+  take effect, even though `--reload` is running** — `uvicorn --reload`'s file watcher can get
+  stuck mid-reload after certain edits (observed after touching `app/core/config.py`): the log
+  shows `WatchFiles detected changes... Reloading...` but never a following
+  `Application startup complete.`, and the *old* worker process keeps silently serving stale
+  code indefinitely. Symptoms: a new route 404s with a generic `{"detail":"Not Found"}` instead
+  of your own 404 message, or a new template variable renders as an empty string. Confirm by
+  checking `/openapi.json` for your new route, or by counting Python processes — multiple
+  orphaned `python.exe` instances from earlier sessions are a common contributor on Windows.
+  Fix: kill every `python.exe` process and start one fresh instance:
+  ```powershell
+  Get-Process -Name python -ErrorAction SilentlyContinue | Stop-Process -Force
+  ```
+  then restart uvicorn as in step 2 above.

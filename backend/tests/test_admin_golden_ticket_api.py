@@ -471,3 +471,69 @@ def test_golden_ticket_send_requires_marked_winner() -> None:
         assert response.json()["detail"] == "Winner is not marked for Golden Ticket"
     finally:
         app.dependency_overrides.clear()
+
+
+def test_golden_ticket_certificate_download_renders_pdf(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Certificate endpoint should render the Golden Ticket letter into a PDF download."""
+
+    rendered: dict[str, Any] = {}
+
+    async def fake_render_certificate_pdf(html: str, filename: str, *, landscape: bool = True) -> bytes:
+        rendered["html"] = html
+        rendered["filename"] = filename
+        return b"%PDF-fake-bytes"
+
+    monkeypatch.setattr(golden_ticket_api, "render_certificate_pdf", fake_render_certificate_pdf)
+
+    class FakeSession:
+        call_count = 0
+
+        async def execute(self, statement) -> FakeWinnerResult | FakeSettingsResult:
+            self.call_count += 1
+            if self.call_count == 1:
+                return FakeWinnerResult(FakeWinner())
+            return FakeSettingsResult()
+
+    async def override_get_db():
+        yield FakeSession()  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/v1/admin/winners/1/golden-ticket/certificate.pdf")
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/pdf"
+        assert "Tania-Labonte-golden-ticket-certificate.pdf" in response.headers["content-disposition"]
+        assert response.content == b"%PDF-fake-bytes"
+        assert "Thank you for your dedication" in rendered["html"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_golden_ticket_certificate_download_requires_marked_winner() -> None:
+    """Certificate endpoint should reject winners not marked as Golden Ticket."""
+
+    class FakeSession:
+        winner = FakeWinner()
+
+        async def execute(self, statement) -> FakeWinnerResult:
+            return FakeWinnerResult(self.winner)
+
+    session = FakeSession()
+    session.winner.golden_ticket = False
+
+    async def override_get_db():
+        yield session  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/v1/admin/winners/1/golden-ticket/certificate.pdf")
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Winner is not marked for Golden Ticket"
+    finally:
+        app.dependency_overrides.clear()

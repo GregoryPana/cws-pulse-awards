@@ -5,16 +5,20 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.database import get_db_session
 from app.core.dependencies import require_admin_claims
 from app.models import ConfigSetting, EmailRecipient, Winner
 from app.schemas.email import EmailPreviewResponse, EmailSendResponse
 from app.schemas.winner import GoldenTicketUpdate, WinnerAdmin
+from app.services.certificate_renderer import render_certificate
 from app.services.email_renderer import render_email
 from app.services.email_service import send_templated_email
+from app.services.pdf_service import render_certificate_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +112,8 @@ def _golden_ticket_context(winner: Winner, config_rows: dict[str, str | None]) -
         "chief_pc_name": config_rows.get("chief_pc_name"),
         "chief_pc_title": config_rows.get("chief_pc_title"),
         "occasion_label": winner.golden_ticket_occasion,
+        "logo_url": get_settings().logo_url,
+        "golden_ticket_image_url": get_settings().golden_ticket_image_url,
     }
 
 
@@ -218,3 +224,43 @@ async def send_golden_ticket_email(
     await db.commit()
 
     return EmailSendResponse(email_sent=True, recipients=recipients, subject=subject)
+
+
+@router.get("/admin/winners/{winner_id}/golden-ticket/certificate.pdf")
+async def download_golden_ticket_certificate(
+    winner_id: int,
+    claims: dict[str, Any] = Depends(require_admin_claims),
+    db: AsyncSession = Depends(get_db_session),
+) -> Response:
+    """Render and download the Golden Ticket certificate as a print-ready PDF."""
+
+    del claims
+    winner = await _get_winner(db, winner_id)
+    if not winner.golden_ticket:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Winner is not marked for Golden Ticket",
+        )
+
+    config_rows = await _golden_ticket_settings(db)
+    context = _golden_ticket_context(winner, config_rows)
+    # The PDF sidecar runs in its own container, so it needs its own reachable asset URLs
+    # for the logo and ticket artwork — see pdf_asset_base_url in core/config.py.
+    context["logo_url"] = get_settings().pdf_logo_url
+    context["golden_ticket_image_url"] = get_settings().pdf_golden_ticket_image_url
+    html = render_certificate("certificate_golden_ticket.html", context)
+
+    filename = f"{winner.first_name}-{winner.last_name}-golden-ticket-certificate.pdf".replace(" ", "-")
+    try:
+        pdf_bytes = await render_certificate_pdf(html, filename)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Certificate generation failed. The PDF service may be unavailable.",
+        ) from exc
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

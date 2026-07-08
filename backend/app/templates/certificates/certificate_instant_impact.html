@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Instant Impact Certificate — {{ winner_first_name }} {{ winner_last_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 297mm; height: 210mm;
+    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+    background: #FDFBF6;
+    color: #2D3748;
+  }
+  .frame {
+    position: relative;
+    width: 297mm; height: 210mm;
+    padding: 14mm;
+  }
+  .border-outer {
+    position: absolute; inset: 8mm;
+    border: 2px solid #0A2240;
+  }
+  .border-inner {
+    position: absolute; inset: 10.5mm;
+    border: 1px solid #10B981;
+  }
+  .corner {
+    position: absolute; width: 26px; height: 26px;
+  }
+  .corner.tl { top: 8mm; left: 8mm; border-top: 3px solid #047857; border-left: 3px solid #047857; }
+  .corner.tr { top: 8mm; right: 8mm; border-top: 3px solid #047857; border-right: 3px solid #047857; }
+  .corner.bl { bottom: 8mm; left: 8mm; border-bottom: 3px solid #047857; border-left: 3px solid #047857; }
+  .corner.br { bottom: 8mm; right: 8mm; border-bottom: 3px solid #047857; border-right: 3px solid #047857; }
+  .content {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10mm 20mm 8mm;
+  }
+  .logo {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid #10B981; padding: 3px; background: #FFFFFF;
+    margin-bottom: 6px;
+  }
+  .brand-name {
+    font-family: 'Outfit', Arial, sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    color: #0A2240;
+  }
+  .brand-sub {
+    font-family: 'Outfit', Arial, sans-serif;
+    font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    color: #047857; margin-top: 2px;
+  }
+  .eyebrow {
+    margin-top: 14px;
+    font-family: 'Outfit', Arial, sans-serif;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 3.5px; text-transform: uppercase;
+    color: #047857;
+  }
+  .title {
+    margin: 6px 0 0;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 900; font-size: 40px; line-height: 1;
+    color: #0A2240;
+  }
+  .title em { font-style: normal; color: #047857; }
+  .badge {
+    margin-top: 10px;
+    display: inline-block;
+    border: 1px solid #10B981;
+    border-radius: 20px;
+    padding: 5px 16px;
+    font-family: 'Outfit', Arial, sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #047857;
+    background: rgba(16,185,129,0.10);
+  }
+  .presented-to {
+    margin-top: 22px;
+    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+    font-style: italic; font-size: 13px; color: #6B8099;
+  }
+  .winner-name {
+    margin-top: 6px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 700; font-size: 46px; line-height: 1.05;
+    color: #0A2240;
+  }
+  .winner-role {
+    margin-top: 4px;
+    font-size: 12.5px; color: #6B8099;
+  }
+  .divider {
+    width: 70px; height: 2px;
+    background: linear-gradient(90deg, transparent, #0070C0, transparent);
+    margin: 16px 0;
+  }
+  .body-text {
+    max-width: 165mm;
+    font-size: 13px; line-height: 1.7; color: #2D3748;
+  }
+  .body-text strong { color: #0A2240; }
+  .story {
+    max-width: 175mm;
+    margin-top: 12px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic; font-weight: 600;
+    font-size: 17px; line-height: 1.5;
+    color: #0A2240;
+  }
+  .meta-row {
+    margin-top: auto;
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 200mm;
+  }
+  .meta-block { text-align: left; }
+  .meta-block.right { text-align: right; }
+  .meta-label {
+    font-family: 'Outfit', Arial, sans-serif;
+    font-size: 8.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #6B8099;
+  }
+  .meta-value {
+    margin-top: 3px;
+    font-size: 12px; font-weight: 600; color: #0A2240;
+  }
+  .rule-line {
+    width: 130px; height: 1px; background: #A7E8CB; margin-bottom: 6px;
+  }
+  .footer-strap {
+    margin-top: 12px;
+    font-family: 'Outfit', Arial, sans-serif;
+    font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: #047857;
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="border-outer"></div>
+    <div class="border-inner"></div>
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <div class="content">
+      <img class="logo" src="{{ logo_url }}" alt="CWS logo">
+      <div class="brand-name">Cable &amp; Wireless Seychelles</div>
+      <div class="brand-sub">CWS Pulse Awards</div>
+
+      <div class="eyebrow">Manager-to-Staff Recognition</div>
+      <h1 class="title">Instant <em>Impact</em></h1>
+      <span class="badge">Certificate of Recognition</span>
+
+      <p class="presented-to">This certificate is proudly presented to</p>
+      <h2 class="winner-name">{{ winner_first_name }} {{ winner_last_name }}</h2>
+      <p class="winner-role">{{ winner_job_title }} &mdash; {{ winner_department }}</p>
+
+      <div class="divider"></div>
+
+      <p class="body-text">
+        In recognition of <strong>{{ subcategory }}</strong>, demonstrating
+        <strong>{{ charter_pillar }}</strong> and living the company value of
+        <strong>{{ company_value }}</strong> &mdash; decisive action that moved the needle for our customers.
+      </p>
+      <p class="story">&ldquo;{{ story }}&rdquo;</p>
+
+      <div class="meta-row">
+        <div class="meta-block">
+          <div class="rule-line"></div>
+          <div class="meta-label">Recognised By</div>
+          <div class="meta-value">{{ nominated_by }}</div>
+        </div>
+        <div class="meta-block right">
+          <div class="rule-line" style="margin-left:auto;"></div>
+          <div class="meta-label">Award Period</div>
+          <div class="meta-value">{{ award_month }}</div>
+        </div>
+      </div>
+
+      <div class="footer-strap">Impact recognised &middot; Momentum multiplied</div>
+    </div>
+  </div>
+</body>
+</html>

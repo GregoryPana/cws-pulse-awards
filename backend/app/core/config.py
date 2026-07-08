@@ -50,6 +50,23 @@ class Settings(BaseSettings):
     photo_storage_path: str = Field(default="/data/pulse/photos", alias="PHOTO_STORAGE_PATH")
     pdf_service_url: str = Field(default="http://127.0.0.1:8001", alias="PDF_SERVICE_URL")
 
+    # The frontend's own reachable origin, used to build fully-qualified static asset
+    # URLs (e.g. the logo) inside emails and PDFs. Deliberately separate from the
+    # admin-configurable `hall_of_fame_url` ConfigSetting: that one is a business-level
+    # "where's the wall of fame" link an admin can retarget, while this is a technical
+    # "where do my own static files actually live right now" value that must match the
+    # real frontend origin in each environment (local dev vs deployed) for images to load.
+    app_base_url: str = Field(default="http://127.0.0.1:5173", alias="APP_BASE_URL")
+
+    # Separate origin used ONLY when building asset URLs for the PDF sidecar to fetch.
+    # The sidecar runs in its own Docker container with its own network namespace, so
+    # in local dev "127.0.0.1" from inside that container is not the host machine —
+    # it must use the special "host.docker.internal" DNS name instead. In production,
+    # where everything sits behind one real domain, this is identical to APP_BASE_URL.
+    pdf_asset_base_url: str = Field(
+        default="http://host.docker.internal:5173", alias="PDF_ASSET_BASE_URL"
+    )
+
     @classmethod
     def settings_customise_sources(
         cls,
@@ -73,6 +90,41 @@ class Settings(BaseSettings):
         if self.entra_tenant_id.strip():
             return f"https://login.microsoftonline.com/{self.entra_tenant_id}/discovery/v2.0/keys"
         return ""
+
+    @computed_field
+    @property
+    def logo_url(self) -> str:
+        """Return the CWS logo URL for emails and the browser-rendered admin preview."""
+
+        return f"{self.app_base_url.rstrip('/')}/brand/cws-logo.png"
+
+    @computed_field
+    @property
+    def golden_ticket_image_url(self) -> str:
+        """Return the Golden Ticket artwork URL for emails and the browser-rendered admin preview."""
+
+        return f"{self.app_base_url.rstrip('/')}/brand/golden-ticket.png"
+
+    @computed_field
+    @property
+    def trophy_image_url(self) -> str:
+        """Return the trophy artwork URL for standard award emails and the admin preview."""
+
+        return f"{self.app_base_url.rstrip('/')}/brand/trophy.png"
+
+    @computed_field
+    @property
+    def pdf_logo_url(self) -> str:
+        """Return the CWS logo URL reachable from inside the PDF sidecar container."""
+
+        return f"{self.pdf_asset_base_url.rstrip('/')}/brand/cws-logo.png"
+
+    @computed_field
+    @property
+    def pdf_golden_ticket_image_url(self) -> str:
+        """Return the Golden Ticket artwork URL reachable from inside the PDF sidecar container."""
+
+        return f"{self.pdf_asset_base_url.rstrip('/')}/brand/golden-ticket.png"
 
     @computed_field
     @property

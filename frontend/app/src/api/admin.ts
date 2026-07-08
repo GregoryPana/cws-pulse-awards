@@ -156,6 +156,41 @@ export async function sendAwardEmail(
   return handle<EmailSendResponse>(response)
 }
 
+export interface CertificateFile {
+  blob: Blob
+  filename: string
+}
+
+async function handlePdf(response: Response, fallbackFilename: string): Promise<CertificateFile> {
+  if (!response.ok) {
+    const body = await response.text().catch(() => '')
+    throw new Error(body || response.statusText)
+  }
+  const disposition = response.headers.get('content-disposition') || ''
+  const match = disposition.match(/filename="([^"]+)"/)
+  return { blob: await response.blob(), filename: match?.[1] || fallbackFilename }
+}
+
+export async function fetchAwardCertificate(
+  winnerId: number,
+  accessToken: string,
+): Promise<CertificateFile> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/certificate.pdf`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handlePdf(response, `winner-${winnerId}-certificate.pdf`)
+}
+
+export async function fetchGoldenTicketCertificate(
+  winnerId: number,
+  accessToken: string,
+): Promise<CertificateFile> {
+  const response = await fetch(`${API_BASE_URL}/admin/winners/${winnerId}/golden-ticket/certificate.pdf`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  return handlePdf(response, `winner-${winnerId}-golden-ticket-certificate.pdf`)
+}
+
 export async function markGoldenTicket(
   winnerId: number,
   payload: GoldenTicketUpdatePayload,

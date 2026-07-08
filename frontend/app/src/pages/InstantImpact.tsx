@@ -62,12 +62,12 @@ export default function InstantImpact() {
         <Header variant="gold" liveLabel="Instant Impact Wall" />
 
         <section className="text-center px-6 pt-[52px] pb-10">
-          <p className="mx-auto mb-4 inline-flex items-center gap-2 rounded-badge border border-gold/25 bg-gold/10 px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[3px] text-gold animate-fadeUp opacity-0 [animation-delay:0.1s]">
+          <p className="mx-auto mb-4 inline-flex items-center gap-2 rounded-badge border border-impact/30 bg-impact/10 px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[3px] text-impact-soft animate-fadeUp opacity-0 [animation-delay:0.1s]">
             <HugeiconsIcon icon={ChampionIcon} size={16} strokeWidth={2} aria-hidden="true" /> Manager-to-Staff Recognition
           </p>
           <h1 className="font-display font-black text-[clamp(34px,5.5vw,64px)] leading-[1.05] mb-4 animate-fadeUp opacity-0 [animation-delay:0.25s]">
             Instant<br />
-            <span className="bg-gradient-to-r from-gold to-gold-soft bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-impact to-impact-soft bg-clip-text text-transparent">
               Impact
             </span>
           </h1>
@@ -75,10 +75,10 @@ export default function InstantImpact() {
             Recognising the staff members whose actions moved the needle &mdash;
             meeting the highest bar of our Customer Centric Charter.
           </p>
-          <div className="inline-flex items-center gap-2 rounded-badge border border-gold/15 bg-[#07182A]/90 px-5 py-2 shadow-xl shadow-black/20 backdrop-blur animate-fadeUp opacity-0 [animation-delay:0.55s]">
+          <div className="inline-flex items-center gap-2 rounded-badge border border-impact/20 bg-[#07182A]/90 px-5 py-2 shadow-xl shadow-black/20 backdrop-blur animate-fadeUp opacity-0 [animation-delay:0.55s]">
             <span className="font-body text-sm text-white/60 tracking-wide">
               Showing{' '}
-              <span className="font-bold text-gold">{heroPeriod}</span>
+              <span className="font-bold text-impact-soft">{heroPeriod}</span>
               {selectedCategory !== 'All' && (
                 <span className="hidden sm:inline"> · {selectedCategory}</span>
               )}
@@ -86,7 +86,7 @@ export default function InstantImpact() {
           </div>
         </section>
 
-        <div className="w-[60px] h-[2px] mx-auto mb-10 bg-gradient-to-r from-transparent via-gold to-transparent animate-fadeUp opacity-0 [animation-delay:0.65s]" />
+        <div className="w-[60px] h-[2px] mx-auto mb-10 bg-gradient-to-r from-transparent via-impact to-transparent animate-fadeUp opacity-0 [animation-delay:0.65s]" />
 
         <PeriodNav
           activeMonth={activeMonth}
@@ -106,7 +106,7 @@ export default function InstantImpact() {
         <section className="max-w-[1100px] mx-auto px-8 pb-20">
           {state === 'loading' && (
             <div className="flex items-center justify-center py-20">
-              <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-impact border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 

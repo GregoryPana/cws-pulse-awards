@@ -76,10 +76,16 @@ Usage in Tailwind: `font-display`, `font-body`, `font-label`
   --color-blue:       #0070C0;
   --color-sky:        #00A3D9;
 
-  /* Gold / award accent */
+  /* Gold / Golden Ticket accent — executive recognition only, see §2 note below */
   --color-gold:       #F5A623;
   --color-gold-soft:  #FFD166;
   --color-amber:      #E8870A;
+
+  /* Instant Impact accent — emerald/teal green, deliberately NOT gold (July 2026;
+     revised same month from an earlier coral/red that read too muted on white/cream) */
+  --color-impact:      #10B981;
+  --color-impact-soft: #34D399;
+  --color-impact-deep: #047857;
 
   /* Neutrals */
   --color-white:      #FFFFFF;
@@ -94,22 +100,45 @@ Usage in Tailwind: `font-display`, `font-body`, `font-label`
 
 **Background per page**: Charter Champions uses `navy-deep` (`#061528`, a darkened navy added July 2026 so cards and gold accents pop against it); Instant Impact uses `--color-deep`. Both walls are intentionally dark canvases — brand colour comes from the cards, orbs, and accents, not the page background.
 
-**Card accent separation (July 2026)**: standard Instant Impact cards use a muted amber/bronze register (`amber` tones, Zap badge icon) so that Golden Ticket cards — animated foil border, breathing gold glow, bright `gold-soft` accents, Sparkles icon — remain unmistakably the brightest thing on the wall. Every card carries a constant `border-trace` beam (sky on the blue wall, amber on the gold wall, dual bright-gold beams on Golden Ticket).
+**Instant Impact vs. Golden Ticket colour separation (July 2026):** Instant Impact originally
+shared the `gold`/`amber` family with Golden Ticket, and the two became too easy to confuse at
+a glance. A first revision moved it to a coral/red accent, but that read as too muted against
+the white/cream sections of the email and certificate — Instant Impact now uses its own
+dedicated **emerald/teal accent** (`impact` / `impact-soft` / `impact-deep`) across the entire
+wall, the award email, and the certificate — background orbs, hero title, period nav, category
+filter, category badge, pillar tag, avatar initials, card bar/glow/border-trace, and the
+header's active nav link — while Golden Ticket keeps the full bright-gold foil treatment
+(animated foil border, breathing glow, `gold-soft` accents, Sparkles icon) so it remains
+unmistakably the most premium thing on either wall. Every card still carries a constant
+`border-trace` beam: sky on the blue wall, emerald on the Instant Impact wall, dual bright-gold
+beams on Golden Ticket.
+
+Internally, several components still use the discriminator key `'gold'` for "the Instant Impact
+wall variant" (a historical name from before this split) even though its colour values now
+point at the `impact` palette, not `gold` — this is intentional and documented inline at each
+call site (`AwardCard.tsx`, `CategoryBadge.tsx`, `PillarTag.tsx`, `PeriodNav.tsx`,
+`HallFilters.tsx`, `Avatar.tsx`). Only Golden Ticket-specific code paths (the `isFeatured`
+branch in `AwardCard.tsx`, the `golden`/`gold`-as-Golden-Ticket variants in `CategoryBadge`/
+`PillarTag`) use the real `gold` tokens.
 
 ### Tailwind Colour Extension
 
 ```typescript
 // tailwind.config.ts — extend colors
 colors: {
-  navy:       '#0A2240',
-  deep:       '#060F1E',
-  blue:       '#0070C0',
-  sky:        '#00A3D9',
-  gold:       '#F5A623',
-  'gold-soft':'#FFD166',
-  amber:      '#E8870A',
-  'mid-gray': '#6B8099',
-  'dark-gray':'#2D3748',
+  navy:         '#0A2240',
+  'navy-deep':  '#061528',
+  deep:         '#060F1E',
+  blue:         '#0070C0',
+  sky:          '#00A3D9',
+  gold:         '#F5A623',
+  'gold-soft':  '#FFD166',
+  amber:        '#E8870A',
+  impact:       '#10B981',
+  'impact-soft':'#34D399',
+  'impact-deep':'#047857',
+  'mid-gray':   '#6B8099',
+  'dark-gray':  '#2D3748',
 }
 ```
 
@@ -119,7 +148,7 @@ colors: {
 |---|---|---|---|---|---|
 | Charter Champion — Peer | `--color-blue` | `--color-sky` | blue → sky | rgba(0,112,192,.2) | `--color-sky` |
 | Charter Champion — Manager sub-type | `--color-navy` | `--color-blue` | navy → blue | rgba(0,112,192,.15) | `#60C4F0` |
-| Instant Impact | `--color-amber` | `--color-gold` | amber → gold → gold-soft | rgba(245,166,35,.15) | `--color-gold-soft` |
+| Instant Impact | `--color-impact-deep` | `--color-impact` | impact-deep → impact | rgba(16,185,129,.15) | `--color-impact-soft` |
 | Golden Ticket | `--color-gold` | `--color-gold-soft` | Full gold treatment — amber → gold → gold-soft | rgba(245,166,35,.15) | `--color-gold` |
 
 The Charter Champions wall has two card bar variants: `peer` (blue→sky) and `manager` (navy→blue). Both live on the same page and the variant is driven by the nomination type, not the award category.
@@ -541,7 +570,7 @@ when switching tabs:
 | Tab | Job | Key elements |
 |---|---|---|
 | **Add Winner** | Create a new recognition (most frequent) | Guided 4-step flow, form with completion ticks, live email preview (renders from the unsaved form via `POST /admin/winners/preview`, debounced ~650ms), save + send |
-| **All Winners** | Manage existing records | Filter bar, master-detail list, inline edit with its own live preview, resend, hide (archive), Golden Ticket panel |
+| **All Winners** | Manage existing records | Filter bar, master-detail list, inline edit with its own live preview, resend, hide (archive), download certificate PDF, Golden Ticket panel (with its own certificate download) |
 | **Recipients** | Configure who receives emails (least frequent) | Add form, on/off switches, delete, live counts |
 
 The live preview is the centrepiece of the entry experience: it renders the real backend
@@ -603,48 +632,123 @@ Rules:
   `data-recipient-row`) so markup stays readable.
 - Buttons carry `active:scale-[0.97]` for press feedback; card hover lift stays CSS.
 
-## 16. Logo
+## 16. Brand Assets & Asset URLs
 
-The official CWS mark (blue dashed-globe) lives at `frontend/app/public/brand/cws-logo.png`.
+Three raster images live in `frontend/app/public/brand/` and are used across the web app,
+emails, and certificate PDFs:
 
-- **Web**: `CwsLogoMark` renders it inside a white circular chip (so the blue mark keeps
+| File | Used for |
+|---|---|
+| `cws-logo.png` | The official CWS mark (blue dashed-globe) — company identity everywhere |
+| `golden-ticket.png` | The literal ticket artwork for the Golden Ticket email and certificate |
+| `trophy.png` | The trophy artwork in the Charter Champion and Instant Impact **emails** (not currently used in those two certificates — only the Golden Ticket certificate carries artwork today) |
+
+- **Web**: `CwsLogoMark` renders the logo inside a white circular chip (so the blue mark keeps
   contrast on dark backgrounds), sized sm/md/lg, with the wordmark alongside. Used across both
   walls (`Header`) and the admin portal. It is also the browser favicon (`index.html`).
-- **Email**: each template masthead shows the logo via an **absolute URL** —
-  `{{ hall_of_fame_url }}/brand/cws-logo.png` (44×44, white rounded chip). Email clients cannot
-  load app-relative or `cid:` paths reliably, and they hide images until the recipient allows
-  them, so the text wordmark beside it remains the fallback. Never inline the logo as SVG in
-  email (clients strip SVG).
+- **Email & certificates**: both images are loaded by **fully-qualified absolute URL**, never
+  bundled or inlined — email clients cannot load app-relative or `cid:` paths reliably, and a
+  PDF has no concept of a relative base URL at all.
 
-## 17. Email Iconography — No Emoji, No SVG
+### Two different asset URLs, and why
+
+The backend computes these URLs from settings rather than hard-coding them, because **the
+correct URL depends on who is fetching the image**:
+
+| Setting | Computed properties | Used by | Local dev value |
+|---|---|---|---|
+| `APP_BASE_URL` | `logo_url`, `golden_ticket_image_url`, `trophy_image_url` | Emails, and the admin's own browser previewing them in an iframe | `http://127.0.0.1:5173` |
+| `PDF_ASSET_BASE_URL` | `pdf_logo_url`, `pdf_golden_ticket_image_url` | Certificate PDFs, fetched by the **PDF sidecar's own headless Chromium** | `http://host.docker.internal:5173` |
+
+The PDF sidecar (`pulse_playwright`) runs in its own Docker container with its own network
+namespace — `127.0.0.1` from inside that container means the container itself, not the host
+machine running Vite. `host.docker.internal` is the Docker-provided DNS name for reaching the
+host from a container. This requires two things on the Vite side (`frontend/app/vite.config.ts`):
+`server.host: true` (bind all interfaces, not just loopback) and
+`server.allowedHosts: ['host.docker.internal']` (Vite otherwise rejects unrecognised Host
+headers as a dev-server security measure). In production both settings collapse to the same
+real domain (`https://pulse.cwsey.com`), since everything sits behind one hostname there.
+
+The certificate endpoints (`admin_winners.py`, `admin_golden_ticket.py`) build their context
+from the same helpers as the emails, then override just the image keys with the `pdf_*`
+variants before calling the certificate renderer — the email context builders themselves stay
+untouched, since they're correct as-is for their own use.
+
+## 17. Email & Certificate Iconography — No Emoji, No SVG
 
 **Resolved July 2026.** Earlier templates used emoji (🏆 🤝 🎫) and later inline SVG for the
 Golden Ticket crown. Both fail widely: emoji render inconsistently and look informal; **inline
 SVG is stripped by Gmail, Outlook, and most clients** — that is why the crown "did not appear."
 
-The rule for all email decoration:
+The rule for all email and certificate decoration:
 
 - Use **plain-text dingbat glyphs** that render as font characters everywhere — e.g. `&#10038;`
-  (✶ six-pointed star) for ornaments and dividers. These are text, not images, so nothing can
-  strip them.
+  (✶ six-pointed star) for small ornaments and dividers. These are text, not images, so nothing
+  can strip them.
 - Convey emphasis with **HTML/CSS structure** (bordered circular medallions, gold rules,
-  letter-spaced labels, the "GT" monogram in Georgia serif) rather than iconography.
-- The only raster image in an email is the logo (§16), loaded by absolute URL with the text
-  masthead as fallback.
+  letter-spaced labels) rather than iconography, where no artwork exists for the concept.
+- Where real artwork exists (the CWS logo, the Golden Ticket), use the **raster PNG loaded by
+  absolute URL** (§16) rather than recreating it in CSS/text — e.g. the Golden Ticket's hero
+  medallion is the actual ticket image, not a "GT" text monogram.
 
-## 18. Golden Ticket Email
+## 18. Golden Ticket Email & Certificate
 
-The Golden Ticket template (`backend/app/templates/emails/golden_ticket.html`) is the premium
-artefact of the system — a foil-and-navy "admit one" ticket:
+The Golden Ticket email (`backend/app/templates/emails/golden_ticket.html`) and its matching
+certificate (`backend/app/templates/certificates/certificate_golden_ticket.html`) are the
+premium artefacts of the system — a foil-and-navy "admit one" ticket:
 
 - Structure: foil gradient stripe → dark masthead (logo + "Admit One" stamp) → radial navy hero
-  with a **"GT" monogram medallion** (gold-ringed circle, Georgia serif, ✶ ornaments) and
-  occasion chip → perforated divider (dashed gold rule with rounded dark notches) → cream winner
-  stub (award-type bar, pillar/value twin panels, serif story quote) → navy CEO letter panel with
-  signature rule → gold CTA → uppercase footer strap.
-- All decoration follows §17 (text glyphs + CSS, no emoji, no SVG). Colours are solid hex with
-  gradient enhancements layered over `background` fallbacks, per §6 Outlook rules. Headings
-  Georgia serif; body Arial.
+  with the **Golden Ticket artwork** (`golden_ticket_image_url`, drop-shadowed) and an occasion
+  chip → perforated divider (dashed gold rule with rounded dark notches, email only) → cream
+  winner stub (award-type bar, pillar/value twin panels, serif story quote) → navy CEO letter
+  panel with signature rule → gold CTA (email) or dual signature blocks (certificate) →
+  uppercase footer strap.
+- All decoration follows §17 (text glyphs + CSS + the one real image, no emoji, no inline SVG).
+  Colours are solid hex with gradient enhancements layered over `background` fallbacks, per §6
+  Outlook rules. Headings Georgia serif; body Arial.
+
+## 19. Winner Certificates (PDF)
+
+Every winner can have a print-ready, one-page **certificate PDF** downloaded from the admin
+portal's All Winners tab — a "Download Certificate" button in the winner's detail panel, and a
+second "Download Certificate" button inside the Golden Ticket panel once a winner is marked.
+Unlike the email, a PDF is not "sent" — it is generated on demand and downloaded locally, so
+there is no save-time choice between "email vs. PDF vs. both"; it is simply always available
+once a winner exists.
+
+### Templates — one per classification, plus Golden Ticket
+
+Certificates mirror the three-way email split exactly (§12), not a single generic design:
+
+| Template | Classification | Theme |
+|---|---|---|
+| `certificate_charter_champion.html` | Charter Champion — Peer-to-Peer | Blue/sky on cream, ornamental double-border |
+| `certificate_instant_impact.html` | Instant Impact — Manager-to-Staff | Emerald/teal on cream, ornamental double-border |
+| `certificate_golden_ticket.html` | Golden Ticket (either classification) | Dark navy/gold foil, most elaborate |
+
+Templates live in `backend/app/templates/certificates/`, rendered by
+`app/services/certificate_renderer.py` (a Jinja2 environment pointed at that directory,
+structurally identical to `email_renderer.py` but kept separate since certificates use full
+modern CSS — flexbox, `@page`, Google Fonts — that email clients could never support).
+
+### Rendering pipeline
+
+1. Backend renders the Jinja2 template to an HTML string (real CSS, not email-safe tables).
+2. That HTML is POSTed to the **PDF sidecar** (`pdf_service/pdf_service.py`, headless Chromium
+   via Playwright) at `/generate`, with `landscape: true`.
+3. The sidecar returns PDF bytes; the endpoint streams them back with
+   `Content-Disposition: attachment` so the browser downloads a named file
+   (`FirstName-LastName-certificate.pdf`).
+4. Page format is fixed at A4 landscape (`page.pdf(format="A4", landscape=True)`); certificates
+   are designed as a single page, so content should not exceed that height.
+
+The sidecar's `/generate` endpoint is deliberately "dumb" — it converts whatever HTML it is
+given, with no template knowledge of its own. All business logic (which template, what data)
+lives in the backend, matching how the email pipeline already works.
+
+**Rebuilding the sidecar**: its code is baked into the Docker image (no live volume mount), so
+changes to `pdf_service/pdf_service.py` require `docker compose build playwright && docker
+compose up -d playwright` — a plain `docker restart` will not pick up code changes.
 
 ---
 

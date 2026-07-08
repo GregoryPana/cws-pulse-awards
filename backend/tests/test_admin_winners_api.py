@@ -503,3 +503,106 @@ def test_award_email_send_returns_500_on_service_failure(
         assert response.json()["detail"] == "Award email send failed"
     finally:
         app.dependency_overrides.clear()
+
+
+def test_certificate_template_name_maps_supported_award_types() -> None:
+    """Certificate template selection should route each award type to its own design."""
+
+    assert admin_winners_api._certificate_template_name("CHARTER_CHAMPION") == "certificate_charter_champion.html"
+    assert admin_winners_api._certificate_template_name("INSTANT_IMPACT") == "certificate_instant_impact.html"
+
+
+def test_award_certificate_download_renders_pdf(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Certificate endpoint should render the winner into a PDF and return it as a download."""
+
+    rendered: dict[str, Any] = {}
+
+    async def fake_render_certificate_pdf(html: str, filename: str, *, landscape: bool = True) -> bytes:
+        rendered["html"] = html
+        rendered["filename"] = filename
+        rendered["landscape"] = landscape
+        return b"%PDF-fake-bytes"
+
+    monkeypatch.setattr(admin_winners_api, "render_certificate_pdf", fake_render_certificate_pdf)
+
+    class FakeSession:
+        call_count = 0
+
+        async def execute(self, statement) -> FakeScalarResult:
+            self.call_count += 1
+            if self.call_count == 1:
+                return FakeScalarResult(FakeWinner())
+            return FakeScalarResult([FakeSetting("hall_of_fame_url", "https://pulse.cwsey.com")])
+
+    async def override_get_db():
+        yield FakeSession()  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/v1/admin/winners/7/certificate.pdf")
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/pdf"
+        assert "Marie-Payet-certificate.pdf" in response.headers["content-disposition"]
+        assert response.content == b"%PDF-fake-bytes"
+        assert "Marie" in rendered["html"]
+        assert rendered["filename"] == "Marie-Payet-certificate.pdf"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_award_certificate_download_returns_404_for_missing_winner() -> None:
+    """Certificate endpoint should 404 when the winner does not exist."""
+
+    class FakeSession:
+        async def execute(self, statement) -> FakeScalarResult:
+            return FakeScalarResult(None)
+
+    async def override_get_db():
+        yield FakeSession()  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/v1/admin/winners/999/certificate.pdf")
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_award_certificate_download_returns_502_on_pdf_service_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Certificate endpoint should surface PDF service failures clearly."""
+
+    async def fake_render_certificate_pdf(html: str, filename: str, *, landscape: bool = True) -> bytes:
+        del html, filename, landscape
+        raise RuntimeError("pdf service unreachable")
+
+    monkeypatch.setattr(admin_winners_api, "render_certificate_pdf", fake_render_certificate_pdf)
+
+    class FakeSession:
+        call_count = 0
+
+        async def execute(self, statement) -> FakeScalarResult:
+            self.call_count += 1
+            if self.call_count == 1:
+                return FakeScalarResult(FakeWinner())
+            return FakeScalarResult([FakeSetting("hall_of_fame_url", "https://pulse.cwsey.com")])
+
+    async def override_get_db():
+        yield FakeSession()  # type: ignore[return-value]
+
+    app.dependency_overrides[require_admin_claims] = override_admin_claims
+    app.dependency_overrides[get_db_session] = override_get_db
+    client = TestClient(app)
+
+    try:
+        response = client.get("/api/v1/admin/winners/7/certificate.pdf")
+        assert response.status_code == 502
+    finally:
+        app.dependency_overrides.clear()

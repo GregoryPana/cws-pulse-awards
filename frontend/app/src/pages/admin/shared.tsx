@@ -163,12 +163,14 @@ export function Field({
   label,
   required,
   done,
+  hint,
   children,
   className,
 }: {
   label: string
   required?: boolean
   done?: boolean
+  hint?: string
   children: ReactNode
   className?: string
 }) {
@@ -187,6 +189,7 @@ export function Field({
         )}
       </span>
       {children}
+      {hint && <span className="text-[11px] leading-snug text-white/40">{hint}</span>}
     </div>
   )
 }
@@ -195,6 +198,7 @@ export function SelectField({
   label,
   required,
   done,
+  hint,
   value,
   onValueChange,
   options,
@@ -203,13 +207,14 @@ export function SelectField({
   label: string
   required?: boolean
   done?: boolean
+  hint?: string
   value: string
   onValueChange: (value: string) => void
   options: { value: string; label: string }[]
   placeholder?: string
 }) {
   return (
-    <Field label={label} required={required} done={done}>
+    <Field label={label} required={required} done={done} hint={hint}>
       <Select value={value || undefined} onValueChange={onValueChange}>
         <SelectTrigger>
           <SelectValue placeholder={placeholder ?? 'Choose one...'} />
@@ -247,9 +252,10 @@ export function WinnerFormFields({
           value={payload.award_type}
           onValueChange={(value) => onChange('award_type', value as WinnerCreatePayload['award_type'])}
           options={[
-            { value: 'CHARTER_CHAMPION', label: 'Charter Champion' },
-            { value: 'INSTANT_IMPACT', label: 'Instant Impact' },
+            { value: 'CHARTER_CHAMPION', label: 'Charter Champion — Peer-to-Peer' },
+            { value: 'INSTANT_IMPACT', label: 'Instant Impact — Manager-to-Staff' },
           ]}
+          hint="This decides which Wall of Fame the winner appears on: Charter Champion = a colleague nominated a colleague. Instant Impact = a manager recognised a staff member."
         />
         <SelectField
           label="Award year"

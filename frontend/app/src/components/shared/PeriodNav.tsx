@@ -18,12 +18,12 @@ interface Props {
 
 const activeChip: Record<string, string> = {
   blue: '!bg-blue !border-blue !text-white shadow-lg shadow-blue/35',
-  gold: '!bg-gradient-to-r !from-amber !to-gold !border-transparent !text-navy !font-bold shadow-lg shadow-gold/35',
+  gold: '!bg-gradient-to-r !from-impact-deep !to-impact !border-transparent !text-white !font-bold shadow-lg shadow-impact/35',
 }
 
 const stepperHover: Record<string, string> = {
   blue: 'hover:border-sky/40 hover:text-sky',
-  gold: 'hover:border-gold/40 hover:text-gold',
+  gold: 'hover:border-impact/40 hover:text-impact-soft',
 }
 
 export default function PeriodNav({ activeMonth, year, onChange, onYearChange, variant }: Props) {

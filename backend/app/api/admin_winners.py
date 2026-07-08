@@ -4,16 +4,20 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.database import get_db_session
 from app.core.dependencies import require_admin_claims
 from app.models import ConfigSetting, EmailRecipient, Winner
 from app.schemas.email import EmailPreviewResponse, EmailSendResponse
 from app.schemas.winner import WinnerAdmin, WinnerAdminListResponse, WinnerCreate
+from app.services.certificate_renderer import render_certificate
 from app.services.email_renderer import render_email
 from app.services.email_service import send_templated_email
+from app.services.pdf_service import render_certificate_pdf
 
 router = APIRouter(prefix="/api/v1", tags=["admin-winners"])
 
@@ -47,6 +51,17 @@ def _award_template_name(award_type: str) -> str:
         return "award_charter_champion.html"
     if award_type == "INSTANT_IMPACT":
         return "award_instant_impact.html"
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported award type")
+
+
+def _certificate_template_name(award_type: str) -> str:
+    """Return the certificate template for a standard award — distinct per
+    classification (Charter Champion = Peer-to-Peer, Instant Impact = Manager-to-Staff)."""
+
+    if award_type == "CHARTER_CHAMPION":
+        return "certificate_charter_champion.html"
+    if award_type == "INSTANT_IMPACT":
+        return "certificate_instant_impact.html"
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported award type")
 
 
@@ -85,6 +100,8 @@ def _award_email_context(winner: Winner, settings: dict[str, str | None]) -> dic
         "award_month": winner.award_month,
         "hall_of_fame_url": settings.get("hall_of_fame_url", ""),
         "photo_url": winner.photo_url,
+        "logo_url": get_settings().logo_url,
+        "trophy_image_url": get_settings().trophy_image_url,
     }
 
 
@@ -156,6 +173,8 @@ async def preview_award_email_from_payload(
         "award_month": payload.award_month,
         "hall_of_fame_url": settings.get("hall_of_fame_url", ""),
         "photo_url": payload.photo_url,
+        "logo_url": get_settings().logo_url,
+        "trophy_image_url": get_settings().trophy_image_url,
     }
 
     html = render_email(_award_template_name(payload.award_type), context)
@@ -326,3 +345,40 @@ async def send_award_email(
         ) from exc
 
     return EmailSendResponse(email_sent=True, recipients=recipients, subject=subject)
+
+
+@router.get("/admin/winners/{winner_id}/certificate.pdf")
+async def download_award_certificate(
+    winner_id: int,
+    claims: dict[str, Any] = Depends(require_admin_claims),
+    db: AsyncSession = Depends(get_db_session),
+) -> Response:
+    """Render and download the standard award certificate as a print-ready PDF."""
+
+    del claims
+    result = await db.execute(select(Winner).where(Winner.id == winner_id))
+    winner = result.scalar_one_or_none()
+    if winner is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Winner not found")
+
+    settings = await _public_settings(db)
+    context = _award_email_context(winner, settings)
+    # The PDF sidecar runs in its own container, so it needs its own reachable asset URL
+    # for the logo — see pdf_asset_base_url in core/config.py.
+    context["logo_url"] = get_settings().pdf_logo_url
+    html = render_certificate(_certificate_template_name(winner.award_type), context)
+
+    filename = f"{winner.first_name}-{winner.last_name}-certificate.pdf".replace(" ", "-")
+    try:
+        pdf_bytes = await render_certificate_pdf(html, filename)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Certificate generation failed. The PDF service may be unavailable.",
+        ) from exc
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

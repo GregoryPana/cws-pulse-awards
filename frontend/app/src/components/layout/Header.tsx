@@ -30,7 +30,7 @@ export default function Header({ variant, liveLabel }: Props) {
           to="/instant-impact"
           className={`font-label text-[11px] font-semibold tracking-wider uppercase px-3 py-1.5 rounded-badge transition-all ${
             pathname === '/instant-impact'
-              ? 'bg-gold/12 text-gold-soft border border-gold/20'
+              ? 'bg-impact/12 text-impact-soft border border-impact/25'
               : 'text-white/40 hover:text-white/70'
           }`}
         >
