@@ -32,10 +32,18 @@ ls -la /opt/actions-runners/ 2>/dev/null
 ss -tlnp | grep -E ':(8000|5433|8001)\b' || echo "all three ports are free"
 ```
 
-If any of those three ports are already taken by a *different* app, stop here and pick new
-ports for Pulse Awards — you'll need to set `BACKEND_PORT` / `DB_PORT` / `PDF_PORT` as GitHub
-Environment variables (§6) to match, and update `backend/pulse-awards.service` and
-`docker-compose.yml` in the repo to the new values before your first deploy.
+**Confirmed conflict on this VM**: ports `8000` and `5433` are already held by other apps
+(`b2b-cx-platform` and/or `vas-system-check`) — nothing on Pulse Awards can use those numbers.
+Port `8001` was free. Pulse Awards uses `8010` (backend) and `5434` (Postgres) instead —
+double-check those are actually free too before proceeding:
+
+```bash
+ss -tlnp | grep -E ':(8010|5434|8001)\b' || echo "8010, 5434, 8001 are all free"
+```
+
+If those are also free, the `BACKEND_PORT=8010` / `DB_PORT=5434` GitHub Environment variables
+(§7) are already set to match — no repo file changes are needed, since every script and the
+systemd unit read these ports from `.env`/environment rather than a hardcoded value.
 `scripts/linux/check_ports.sh` re-runs this same check automatically on every deploy, so a
 future collision fails the deploy loudly instead of silently breaking another app.
 
@@ -133,45 +141,77 @@ gha-pulse-awards ALL=(root) NOPASSWD: \
 
 Adjust exact paths/binaries to match your distro (`which systemctl`, `which nginx`) before saving.
 
-## 6. Create the app root and shared secrets
+## 6. Create the app root — no manual `.env` needed
 
 ```bash
 sudo mkdir -p /opt/pulse-awards/releases
 sudo chown -R gha-pulse-awards:gha-pulse-awards /opt/pulse-awards
-
-# .env is never committed — create it directly on the VM from .env.example
-sudo -u gha-pulse-awards cp /opt/actions-runners/pulse-awards/_work/cws-pulse-awards/cws-pulse-awards/.env.example \
-  /opt/pulse-awards/.env
-sudo -u gha-pulse-awards nano /opt/pulse-awards/.env   # fill in real secrets — see .env.example comments
 ```
+
+That's it. Unlike a typical first-time setup, you do **not** need to hand-create or edit
+`/opt/pulse-awards/.env` — `scripts/linux/deploy_backend.sh` bootstraps it automatically the
+first time it runs, populating it from the GitHub Environment variables/secrets in §7. As long
+as those are set before the first deploy, `.env` needs zero manual editing, ever, for the
+values listed there. See §7 for exactly which values sync on every deploy vs. are written once
+at bootstrap and then left alone.
 
 The self-signed TLS certificate is provisioned separately per
 `docs/01-standards/internal-dev-kit/03_NGINX_REVERSE_PROXY_GUIDE.md` — do that before the first
 `deploy_nginx.sh` run, or it will fail with a clear "missing certificate" error rather than a
 confusing NGINX failure.
 
-## 7. One VM today, two environments in GitHub
+## 7. GitHub Environment configuration
 
-Configure both **Settings → Environments → staging** and **→ production** on the repo. For now,
-give both environments the *same* variable values, since both point at this one VM:
+Configure both **Settings → Environments → staging** and **→ production** on the repo. Since
+both currently point at this one VM (§0), staging and production need the **same** values for
+everything below — they're really two workflows sharing one live app instance right now, not
+two isolated environments. In particular, **`DB_PASSWORD` must be identical in both**: there is
+only one Postgres container on this VM, so setting a different password in each environment
+would just make one of the two deploys fail to authenticate.
 
-| Variable | Value (today) |
+### Variables (`vars` — visible in the GitHub UI, not encrypted)
+
+| Variable | Value |
 |---|---|
 | `APP_ROOT` | `/opt/pulse-awards` |
-| `BACKEND_PORT` | `8000` |
-| `DB_PORT` | `5433` |
+| `BACKEND_PORT` | `8010` *(not 8000 — already taken by another app on this VM)* |
+| `DB_PORT` | `5434` *(not 5433 — already taken by another app on this VM)* |
 | `PDF_PORT` | `8001` |
 | `SERVER_NAME` | `pulse.cwsey.com` |
+| `EXPECTED_HOSTNAME` | `cwscx-tst01` — safety check, the deploy refuses to run if it lands on the wrong host |
+| `SMTP_HOST` | `172.16.77.10` |
+| `SMTP_PORT` | `587` |
+| `SMTP_FROM` | `noreply@cwseychelles.com` |
+| `SMTP_TIMEOUT_SECONDS` | `3` |
+| `ADMIN_ROLE` | `CWS-Pulse-Admin` |
+
+These are re-written into `/opt/pulse-awards/.env` on **every** deploy — change one here and
+re-run the workflow, no VM login required.
+
+### Secrets (`secrets` — encrypted, never shown again after creation)
+
+| Secret | Written when | Notes |
+|---|---|---|
+| `APP_SECRET_KEY` | Bootstrap only | Already generated and set (a random 64-char hex value) |
+| `DB_PASSWORD` | Bootstrap only | You choose this — see the main chat response for the exact `gh secret set` command |
+| `ENTRA_TENANT_ID` | Bootstrap only | From the Entra app registration, once it exists (`EXIT.md` §8) |
+| `ENTRA_CLIENT_ID` | Bootstrap only | From the Entra app registration, once it exists |
+
+"Bootstrap only" means: written into `.env` the first time `deploy_backend.sh` ever runs
+(because `.env` doesn't exist yet), then left completely alone on every later deploy — rotating
+one of these deliberately requires either editing `.env` directly on the VM, or deleting `.env`
+and letting the next deploy re-bootstrap from a fresh GitHub secret value.
 
 On **production**, also add a **required reviewer** (Settings → Environments → production →
-Protection rules) — this is the actual approval gate; `workflow_dispatch` alone does not stop
-anyone with repo write access from triggering a production deploy immediately.
+Protection rules) if/when a second admin exists to review deploys — right now there's only one
+collaborator on the repo, so this is skipped for now.
 
 **When a separate production VM eventually exists:** register a second runner there following
 this same guide, with labels `self-hosted,linux,pulse-awards,production` (drop `staging`), and
-update only the `production` environment's variables above to that VM's real values. Neither
-`deploy-production.yml` nor any deploy script needs to change — GitHub Actions routes the job to
-whichever runner's labels match.
+update only the `production` environment's variables/secrets above to that VM's real values —
+starting with `DB_PASSWORD`, which can finally differ once it's truly a separate database.
+Neither `deploy-production.yml` nor any deploy script needs to change — GitHub Actions routes
+the job to whichever runner's labels match.
 
 ## 8. First deploy
 

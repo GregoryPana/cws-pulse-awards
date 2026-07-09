@@ -1,17 +1,116 @@
 #!/usr/bin/env bash
-# Deploy the backend: refresh the systemd unit if changed, start/refresh the
-# Docker support services (Postgres + PDF sidecar), run migrations against
+# Deploy the backend: bootstrap or refresh /opt/pulse-awards/.env from GitHub
+# Environment vars/secrets, refresh the systemd unit if changed, start/refresh
+# the Docker support services (Postgres + PDF sidecar), run migrations against
 # the newly-installed release, then restart the pulse-awards service.
 #
 # Must run AFTER scripts/linux/install_release_bundle.sh has repointed
 # /opt/pulse-awards/backend at the new release.
+#
+# Config model (matches the pattern already used by other apps on this VM,
+# e.g. cx-b2b-platform's deploy_backend.sh):
+#   - BOOTSTRAP (only when .env does not exist yet): populates every key,
+#     including the sensitive ones, from whatever CI env vars are present —
+#     so a first-time VM setup needs zero manual `.env` editing as long as
+#     the GitHub Environment secrets are set.
+#   - SYNC (every deploy, bootstrap or not): re-writes only the low-risk,
+#     frequently-changed operational keys (SMTP, ADMIN_ROLE, the two asset
+#     base URLs) from the current CI env vars, so changing those requires
+#     only a GitHub Environment variable update + re-run, never VM access.
+#   - Everything else (APP_SECRET_KEY, DB_PASSWORD, DATABASE_URL, Entra IDs)
+#     is written once at bootstrap and then left alone by every later
+#     deploy — rotating those deliberately requires a VM login, by design.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APP_NAME="${APP_NAME:-pulse-awards}"
 APP_ROOT="${APP_ROOT:-/opt/$APP_NAME}"
+SERVER_NAME="${SERVER_NAME:-pulse.cwsey.com}"
+DB_PORT="${DB_PORT:-5433}"
+ENV_FILE="$APP_ROOT/.env"
 SERVICE_UNIT_SRC="$ROOT_DIR/backend/pulse-awards.service"
 SERVICE_UNIT_DEST="/etc/systemd/system/$APP_NAME.service"
+
+upsert_env_value() {
+  local key="$1"
+  local value="$2"
+  python3 - "$ENV_FILE" "$key" "$value" <<'PY'
+from pathlib import Path
+import sys
+
+env_path, key, value = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+lines = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+output, updated = [], False
+for line in lines:
+    if line.startswith(f"{key}="):
+        output.append(f"{key}={value}")
+        updated = True
+    else:
+        output.append(line)
+if not updated:
+    output.append(f"{key}={value}")
+env_path.write_text("\n".join(output) + "\n", encoding="utf-8")
+PY
+}
+
+bootstrap_env_if_missing() {
+  if [[ -f "$ENV_FILE" ]]; then
+    echo "$ENV_FILE already exists — skipping bootstrap (only the synced keys below are refreshed)."
+    return
+  fi
+
+  echo "$ENV_FILE does not exist yet — bootstrapping from .env.example and CI-provided values."
+  cp "$ROOT_DIR/.env.example" "$ENV_FILE"
+
+  # Sensitive / rarely-changed values — only ever written here, at first bootstrap.
+  # Each is only upserted if the CI job actually provided it, so a partial
+  # bootstrap (e.g. Entra not yet registered) doesn't clobber existing blanks.
+  [[ -n "${APP_SECRET_KEY:-}" ]] && upsert_env_value APP_SECRET_KEY "$APP_SECRET_KEY"
+  [[ -n "${DB_PASSWORD:-}" ]] && upsert_env_value DB_PASSWORD "$DB_PASSWORD"
+  # Leave DATABASE_URL blank (overriding .env.example's CHANGE_ME placeholder) so
+  # the backend's own fallback (app/core/config.py: resolved_database_url) builds
+  # it fresh from DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD on every startup —
+  # this is what keeps it correct even if DB_PORT changes after bootstrap, since
+  # DB_PORT is synced every deploy but a static DATABASE_URL would not be.
+  upsert_env_value DATABASE_URL ""
+  if [[ -n "${ENTRA_TENANT_ID:-}" ]]; then
+    upsert_env_value ENTRA_TENANT_ID "$ENTRA_TENANT_ID"
+    upsert_env_value ENTRA_AUTHORITY "https://login.microsoftonline.com/${ENTRA_TENANT_ID}"
+    upsert_env_value ENTRA_ISSUER "https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0"
+  fi
+  if [[ -n "${ENTRA_CLIENT_ID:-}" ]]; then
+    upsert_env_value ENTRA_CLIENT_ID "$ENTRA_CLIENT_ID"
+    upsert_env_value ENTRA_AUDIENCE "api://${ENTRA_CLIENT_ID}"
+  fi
+
+  echo "Bootstrap complete. Review $ENV_FILE once by hand before the first restart if anything above was skipped."
+}
+
+sync_runtime_env_from_ci() {
+  echo "Syncing operational config from CI into $ENV_FILE..."
+  local key
+  for key in SMTP_HOST SMTP_PORT SMTP_FROM SMTP_TIMEOUT_SECONDS ADMIN_ROLE; do
+    if [[ -n "${!key:-}" ]]; then
+      upsert_env_value "$key" "${!key}"
+    fi
+  done
+
+  # Ports — always kept in sync so the systemd unit (which expands
+  # ${BACKEND_PORT} from this same file) and the app's own DB/PDF client
+  # config never drift from what check_ports.sh / docker-compose actually
+  # bound on a shared, multi-app VM.
+  upsert_env_value BACKEND_PORT "${BACKEND_PORT:-8000}"
+  upsert_env_value DB_PORT "${DB_PORT:-5433}"
+  upsert_env_value PDF_SERVICE_URL "http://127.0.0.1:${PDF_PORT:-8001}"
+
+  # Derived from SERVER_NAME — always kept in sync, never requires its own secret.
+  upsert_env_value APP_BASE_URL "https://${SERVER_NAME}"
+  upsert_env_value PDF_ASSET_BASE_URL "https://${SERVER_NAME}"
+
+  # Force-false on every deploy, never sourced from a variable — this must
+  # never accidentally be true in staging or production.
+  upsert_env_value DEV_AUTH_ENABLED "false"
+}
 
 echo "== Ensuring the $APP_NAME service user exists =="
 id -u pulse &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin pulse
@@ -19,6 +118,10 @@ id -u pulse &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/n
 echo "== Ensuring photo storage directory exists =="
 mkdir -p /data/pulse/photos
 chown pulse:pulse /data/pulse/photos
+
+echo "== Preparing $ENV_FILE =="
+bootstrap_env_if_missing
+sync_runtime_env_from_ci
 
 echo "== Refreshing systemd unit if changed =="
 if ! cmp -s "$SERVICE_UNIT_SRC" "$SERVICE_UNIT_DEST" 2>/dev/null; then
@@ -31,7 +134,7 @@ else
 fi
 
 echo "== Starting Docker support services (Postgres + PDF sidecar) =="
-docker compose -f "$APP_ROOT/docker-compose.yml" --env-file "$APP_ROOT/.env" up -d --build
+docker compose -f "$APP_ROOT/docker-compose.yml" --env-file "$ENV_FILE" up -d --build
 
 echo "Waiting for support services to report healthy..."
 for _ in $(seq 1 30); do

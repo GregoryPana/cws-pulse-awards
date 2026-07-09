@@ -61,7 +61,7 @@ verify_service_template() {
     echo "Service template missing expected EnvironmentFile"
     exit 1
   }
-  grep -Fq 'ExecStart=/opt/pulse-awards/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2' "$SERVICE_TEMPLATE" || {
+  grep -Fq 'ExecStart=/opt/pulse-awards/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port ${BACKEND_PORT} --workers 2' "$SERVICE_TEMPLATE" || {
     echo "Service template missing expected ExecStart"
     exit 1
   }
@@ -145,7 +145,7 @@ verify_compose_env_wiring() {
     echo ".env.example missing expected DB_PORT value"
     exit 1
   }
-  grep -Fq '127.0.0.1:5433:5432' "$COMPOSE_FILE" || {
+  grep -Fq '127.0.0.1:${DB_PORT:-5433}:5432' "$COMPOSE_FILE" || {
     echo "docker-compose.yml missing expected PostgreSQL port mapping"
     exit 1
   }
@@ -153,7 +153,7 @@ verify_compose_env_wiring() {
     echo ".env.example missing expected PDF service URL"
     exit 1
   }
-  grep -Fq '127.0.0.1:8001:8001' "$COMPOSE_FILE" || {
+  grep -Fq '127.0.0.1:${PDF_PORT:-8001}:8001' "$COMPOSE_FILE" || {
     echo "docker-compose.yml missing expected PDF sidecar port mapping"
     exit 1
   }

@@ -77,6 +77,18 @@ jobs:
       DB_PORT: ${{ vars.DB_PORT || '5433' }}
       PDF_PORT: ${{ vars.PDF_PORT || '8001' }}
       SERVER_NAME: ${{ vars.SERVER_NAME || 'pulse.cwsey.com' }}
+      EXPECTED_HOSTNAME: ${{ vars.EXPECTED_HOSTNAME || 'cwscx-tst01' }}
+      # Operational config, safe to view — synced into /opt/pulse-awards/.env on every deploy.
+      SMTP_HOST: ${{ vars.SMTP_HOST }}
+      SMTP_PORT: ${{ vars.SMTP_PORT }}
+      SMTP_FROM: ${{ vars.SMTP_FROM }}
+      SMTP_TIMEOUT_SECONDS: ${{ vars.SMTP_TIMEOUT_SECONDS }}
+      ADMIN_ROLE: ${{ vars.ADMIN_ROLE }}
+      # Sensitive, written once at first bootstrap only — never re-synced afterwards.
+      APP_SECRET_KEY: ${{ secrets.APP_SECRET_KEY }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      ENTRA_TENANT_ID: ${{ secrets.ENTRA_TENANT_ID }}
+      ENTRA_CLIENT_ID: ${{ secrets.ENTRA_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,6 +100,16 @@ jobs:
           git fetch --prune --tags
           git checkout --force "$GITHUB_SHA"
           git clean -ffdx
+
+      - name: Guard expected deploy host
+        run: |
+          set -euo pipefail
+          actual_hostname="$(hostname -s)"
+          if [[ "$actual_hostname" != "$EXPECTED_HOSTNAME" ]]; then
+            echo "::error::This job landed on host '$actual_hostname', expected '$EXPECTED_HOSTNAME'. Refusing to deploy."
+            exit 1
+          fi
+          echo "Confirmed deploy host: $actual_hostname"
 
       - name: Check for port conflicts with other apps on this VM
         run: ./scripts/linux/check_ports.sh

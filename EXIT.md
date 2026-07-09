@@ -30,9 +30,15 @@ Current status: **Phase 0 baseline verified locally / not production-ready**.
 
 - Backend: Python 3.12 + FastAPI, SQLAlchemy async, Alembic, managed by systemd on VM host.
 - Frontend(s): React 18 + TypeScript + Vite + Tailwind/shadcn baseline; static build served by host NGINX. Public routes `/charter-champions` and `/instant-impact`; admin routes under `/admin/*`.
-- Reverse proxy: Host NGINX, `/api/` proxied to backend on `127.0.0.1:8000`, frontend static files served from disk.
-- Database: PostgreSQL 16 via Docker Compose, host port `5433`, named persistent volume.
-- PDF sidecar: Playwright utility service via Docker Compose, localhost `8001`, no persistent data.
+- Reverse proxy: Host NGINX, `/api/` proxied to the backend, frontend static files served from disk.
+- Database: PostgreSQL 16 via Docker Compose, named persistent volume.
+- PDF sidecar: Playwright utility service via Docker Compose, localhost only, no persistent data.
+- **Ports are environment-configurable, not fixed** (`backend/pulse-awards.service` and
+  `docker-compose.yml` both read `BACKEND_PORT`/`DB_PORT`/`PDF_PORT` rather than hardcoding
+  them): local dev defaults to `8000`/`5433`/`8001`, but on `cwscx-tst01` — a VM shared with
+  other apps — `8000` and `5433` were already taken, so this app actually runs on
+  `8010`/`5434`/`8001` there. See `docs/deployment/self-hosted-runner-setup.md` §7 for the
+  live values (set as GitHub Environment variables, changeable without VM access).
 - Authentication: Microsoft Entra ID; frontend MSAL; backend JWT/JWKS validation and authoritative role enforcement.
 - Monitoring: Health/readiness endpoints required; Uptime Kuma recommended once deployed.
 
@@ -52,6 +58,11 @@ Current status: **Phase 0 baseline verified locally / not production-ready**.
   `self-hosted,linux,pulse-awards,staging,production` — see
   `docs/deployment/self-hosted-runner-setup.md` for the full setup and the plan for splitting
   onto a separate production VM later.
+- Config/secrets model: `/opt/pulse-awards/.env` is never hand-created. `deploy_backend.sh`
+  bootstraps it on first deploy from GitHub Environment vars/secrets, then re-syncs the
+  low-risk operational keys (SMTP, ports, ADMIN_ROLE, the two asset base URLs) on every
+  subsequent deploy — see `docs/deployment/self-hosted-runner-setup.md` §7 for exactly which
+  keys sync vs. are written once. No routine config change requires VM access.
 
 ## 5. Runtime Paths
 

@@ -29,9 +29,10 @@ services:
       POSTGRES_USER: pulse
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      # Host port 5433 — DTO standard, avoids clash with local PostgreSQL on 5432
-      # Backend connects via: postgresql+asyncpg://pulse:<password>@127.0.0.1:5433/pulse_awards
-      - "127.0.0.1:5433:5432"
+      # Host port defaults to 5433 (DTO standard, avoids clashing with local PostgreSQL on
+      # 5432) — overridable per-VM via DB_PORT when another app already holds 5433, e.g. on
+      # a shared multi-app VM. Backend connects via DATABASE_URL, not this literal port.
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
     volumes:
       - pulse_db_data:/var/lib/postgresql/data
     networks:
@@ -50,9 +51,10 @@ services:
     container_name: pulse_playwright
     restart: unless-stopped
     ports:
-      # Bound to localhost only — backend calls http://127.0.0.1:8001
-      # Not reachable from outside the VM
-      - "127.0.0.1:8001:8001"
+      # Bound to localhost only — backend calls http://127.0.0.1:$PDF_PORT.
+      # Not reachable from outside the VM. Overridable via PDF_PORT if 8001 is
+      # already taken by another app on a shared VM.
+      - "127.0.0.1:${PDF_PORT:-8001}:8001"
     networks:
       - pulse_internal
     healthcheck:
