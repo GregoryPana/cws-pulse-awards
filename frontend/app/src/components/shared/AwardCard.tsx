@@ -80,7 +80,10 @@ function FloatingSparkles() {
       <span className="absolute right-16 top-12 animate-floaty text-gold/60 [animation-delay:1.4s]">
         <HugeiconsIcon icon={SparklesIcon} size={12} strokeWidth={1.6} />
       </span>
-      <span className="absolute bottom-6 left-8 animate-floaty text-gold/50 [animation-delay:2.6s]">
+      {/* Kept close to the card's left edge (not bottom-8) so it never lands on top of the
+          "Nominated by" line, which sits at the bottom of the left column in both the
+          stacked (mobile) and two-column (desktop) layouts. */}
+      <span className="absolute left-2 top-1/2 -translate-y-1/2 animate-floaty text-gold/50 [animation-delay:2.6s]">
         <HugeiconsIcon icon={SparklesIcon} size={14} strokeWidth={1.6} />
       </span>
     </div>
