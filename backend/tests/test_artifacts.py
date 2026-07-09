@@ -33,9 +33,9 @@ def test_compose_and_env_example_stay_wired_together() -> None:
 
     assert 'POSTGRES_PASSWORD: ${DB_PASSWORD}' in compose_content
     assert 'DB_PORT=5433' in env_content
-    assert '127.0.0.1:5433:5432' in compose_content
+    assert '127.0.0.1:${DB_PORT:-5433}:5432' in compose_content
     assert 'PDF_SERVICE_URL=http://127.0.0.1:8001' in env_content
-    assert '127.0.0.1:8001:8001' in compose_content
+    assert '127.0.0.1:${PDF_PORT:-8001}:8001' in compose_content
 
 
 def test_ci_workflow_covers_phase0_backend_baseline() -> None:
