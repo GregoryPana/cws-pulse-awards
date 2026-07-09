@@ -210,8 +210,11 @@ sudo nginx -t && sudo systemctl reload nginx
 
 - [ ] Phase 0 approved by Gregory.
 - [x] GitHub remote created and branch pushed.
-- [ ] CI baseline checks passing in GitHub Actions.
-- [ ] Staging deployment verified.
+- [x] CI baseline checks passing in GitHub Actions.
+- [x] Staging deployment verified — first successful end-to-end `deploy-staging.yml` run on
+      2026-07-09, live at `https://cwscx-tst01.cwsey.com/pulse-awards/`; backend health/readiness,
+      DB, SMTP, and all public routes confirmed via `verify_release.sh`. Entra sign-in not yet
+      validated (`ENTRA_TENANT_ID`/`ENTRA_CLIENT_ID` still outstanding).
 - [ ] Production deployment verified.
 - [ ] Monitoring configured.
 - [ ] Backup completed and restore-readiness tested.
@@ -222,15 +225,19 @@ sudo nginx -t && sudo systemctl reload nginx
 ## 13. Open Items Before Production Handover
 
 - Complete approved Phase 0 review against the verified local baseline.
-- ~~Create/confirm GitHub private repo remote.~~ Done — see §4.
-- Register the self-hosted runner on `cwscx-tst01` per
-  `docs/deployment/self-hosted-runner-setup.md` (not yet performed on the actual VM).
-- Configure the `staging` and `production` GitHub Environments (variables + production's
-  required-reviewer rule) per §7 of the runner setup guide.
-- Run `deploy-staging.yml` for the first time and confirm `scripts/linux/verify_release.sh`
-  passes end-to-end against the real VM.
-- Provision the self-signed TLS certificate at `/etc/ssl/pulse-awards/` before the first
-  `deploy_nginx.sh` run.
+- ~~Create/confirm GitHub private repo remote.~~ Done — see §4. Repo is now **public**
+  (flipped from private to unblock exhausted GitHub Actions minutes for hosted `ci` runs).
+- ~~Register the self-hosted runner on `cwscx-tst01`~~ Done — `pulse-awards-runner-01` is
+  registered and active.
+- ~~Configure the `staging` and `production` GitHub Environments~~ Done — variables and
+  `DB_PASSWORD`/`APP_SECRET_KEY` secrets set in both; production has no required-reviewer rule
+  yet (only one collaborator).
+- ~~Run `deploy-staging.yml` for the first time~~ Done 2026-07-09 — `verify_release.sh` passed
+  end-to-end against the real VM.
+- ~~Provision a TLS certificate~~ Not needed — Pulse Awards has no dedicated vhost/domain on
+  `cwscx-tst01`; it rides the shared host's existing certificate (see §3/§4).
+- Get `ENTRA_TENANT_ID`/`ENTRA_CLIENT_ID` GitHub secrets set once the Entra app registration
+  exists, and validate real admin sign-in against staging.
 - Complete frontend and admin workflows in later phases.
 - Replace email templates with reviewed MJML-derived production templates.
 - Complete backup/restore scripts and tests.
