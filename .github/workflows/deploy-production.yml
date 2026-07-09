@@ -78,10 +78,15 @@ jobs:
     env:
       APP_NAME: pulse-awards
       APP_ROOT: ${{ vars.APP_ROOT || '/opt/pulse-awards' }}
-      BACKEND_PORT: ${{ vars.BACKEND_PORT || '8000' }}
-      DB_PORT: ${{ vars.DB_PORT || '5433' }}
+      BACKEND_PORT: ${{ vars.BACKEND_PORT || '8020' }}
+      DB_PORT: ${{ vars.DB_PORT || '5434' }}
       PDF_PORT: ${{ vars.PDF_PORT || '8001' }}
-      SERVER_NAME: ${{ vars.SERVER_NAME || 'pulse.cwsey.com' }}
+      SERVER_NAME: ${{ vars.SERVER_NAME || 'cwscx-tst01.cwsey.com' }}
+      # cwscx-tst01 is a shared VM with one NGINX config — Pulse Awards is mounted
+      # under this path rather than owning its own domain. See
+      # docs/deployment/shared-vm-inventory.md. Leave "" only for a future
+      # dedicated-domain deploy.
+      URL_PATH_PREFIX: ${{ vars.URL_PATH_PREFIX || '/pulse-awards' }}
       EXPECTED_HOSTNAME: ${{ vars.EXPECTED_HOSTNAME || 'cwscx-tst01' }}
       # Operational config, safe to view — synced into /opt/pulse-awards/.env on every deploy.
       SMTP_HOST: ${{ vars.SMTP_HOST }}

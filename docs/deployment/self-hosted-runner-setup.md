@@ -124,8 +124,11 @@ systemctl list-units | grep pulse-awards-runner-01
 ## 5. Grant the runner user exactly the sudo it needs
 
 The deploy scripts run `systemctl restart pulse-awards`, `systemctl reload nginx`, write to
-`/etc/nginx/sites-available/`, `/etc/systemd/system/`, `/opt/pulse-awards/`, and `/data/pulse/`.
-Scope `sudo` to only that — not a blanket `NOPASSWD: ALL`:
+`/etc/systemd/system/`, `/opt/pulse-awards/`, `/data/pulse/`, and — unlike a typical app on its
+own vhost — **`/etc/nginx/snippets/cwscx-staging-extra-routes.conf`**, a file shared with other
+apps on this VM (see §7's NGINX note). Pulse Awards never touches `/etc/nginx/sites-available/`
+at all, since it doesn't own a server block. Scope `sudo` to only what's needed — not a blanket
+`NOPASSWD: ALL`:
 
 ```bash
 sudo visudo -f /etc/sudoers.d/gha-pulse-awards
@@ -139,7 +142,6 @@ gha-pulse-awards ALL=(root) NOPASSWD: \
   /usr/bin/systemctl enable pulse-awards, \
   /usr/bin/systemctl is-active *, \
   /usr/sbin/nginx -t, \
-  /usr/bin/cp * /etc/nginx/sites-available/*, \
   /usr/bin/cp * /etc/systemd/system/*, \
   /usr/sbin/useradd *, \
   /usr/bin/chown * /opt/pulse-awards*, \
@@ -149,8 +151,13 @@ gha-pulse-awards ALL=(root) NOPASSWD: \
 ```
 
 Adjust exact paths/binaries to match your distro (`which systemctl`, `which nginx`) before saving.
+The runner user also needs plain (non-sudo) write access to
+`/etc/nginx/snippets/cwscx-staging-extra-routes.conf` itself (`deploy_nginx.sh` edits it
+directly, not via `cp`+sudo) — either `chgrp`/`chmod` it to a group the runner user belongs to,
+or add a `visudo` line for `/usr/bin/tee /etc/nginx/snippets/cwscx-staging-extra-routes.conf`
+style access if your distro's file permissions require it.
 
-## 6. Create the app root — no manual `.env` needed
+## 6. Create the app root — no manual `.env` or TLS cert needed
 
 ```bash
 sudo mkdir -p /opt/pulse-awards/releases
@@ -164,10 +171,9 @@ as those are set before the first deploy, `.env` needs zero manual editing, ever
 values listed there. See §7 for exactly which values sync on every deploy vs. are written once
 at bootstrap and then left alone.
 
-The self-signed TLS certificate is provisioned separately per
-`docs/01-standards/internal-dev-kit/03_NGINX_REVERSE_PROXY_GUIDE.md` — do that before the first
-`deploy_nginx.sh` run, or it will fail with a clear "missing certificate" error rather than a
-confusing NGINX failure.
+You also do **not** need to provision a TLS certificate for Pulse Awards — this app has no
+domain or vhost of its own on `cwscx-tst01`; it rides on the shared host's existing
+`cwscx.crt`/`cwscx.key`. See §7 for exactly how the NGINX integration works.
 
 ## 7. GitHub Environment configuration
 
@@ -178,6 +184,26 @@ two isolated environments. In particular, **`DB_PASSWORD` must be identical in b
 only one Postgres container on this VM, so setting a different password in each environment
 would just make one of the two deploys fail to authenticate.
 
+### NGINX: path-based hosting, not a dedicated domain
+
+`cwscx-tst01` already runs one shared NGINX config (owned by the `cx-b2b-platform` repo's own
+deploy, which fully re-renders `/etc/nginx/sites-available/cwscx-staging` on every one of ITS
+deploys — Pulse Awards must never touch that file). Every app on this VM is mounted as a
+**path** under the one shared hostname (`/dashboard/`, `/surveys/*`, `/system-check/`), not its
+own subdomain/vhost/cert. Pulse Awards follows the same convention: `SERVER_NAME` is the shared
+host, and `URL_PATH_PREFIX` is Pulse Awards' own path. `scripts/linux/deploy_nginx.sh` manages a
+BEGIN/END-marked block inside `/etc/nginx/snippets/cwscx-staging-extra-routes.conf` — a file
+already `include`d by the shared server block and never re-rendered by the sibling app's own
+deploys, so no coordination with that app's pipeline is needed. The Hermes
+**CWS DTO - Project Environment Register** note is the authoritative cross-project source for
+this VM's full footprint (every app's ports, routes, systemd names, runners) — keep it in sync
+whenever any of the values below change; this repo's own docs are a secondary, project-local copy.
+
+If Pulse Awards is ever given its own dedicated domain/vhost (e.g. `pulse.cwsey.com` with its
+own DNS + TLS cert), only `SERVER_NAME`/`URL_PATH_PREFIX` change here and
+`deploy/nginx/pulse-awards.conf.template` would need to become a full `server {}` block again —
+no application code changes either way.
+
 ### Variables (`vars` — visible in the GitHub UI, not encrypted)
 
 | Variable | Value |
@@ -186,7 +212,8 @@ would just make one of the two deploys fail to authenticate.
 | `BACKEND_PORT` | `8020` *(8000 and 8010 are both reserved/taken on this VM)* |
 | `DB_PORT` | `5434` *(not 5433 — already taken by another app on this VM)* |
 | `PDF_PORT` | `8001` |
-| `SERVER_NAME` | `pulse.cwsey.com` |
+| `SERVER_NAME` | `cwscx-tst01.cwsey.com` *(the shared VM's hostname — not a dedicated domain)* |
+| `URL_PATH_PREFIX` | `/pulse-awards` *(mount path under the shared host; no trailing slash)* |
 | `EXPECTED_HOSTNAME` | `cwscx-tst01` — safety check, the deploy refuses to run if it lands on the wrong host |
 | `SMTP_HOST` | `172.16.77.10` |
 | `SMTP_PORT` | `587` |
@@ -195,7 +222,11 @@ would just make one of the two deploys fail to authenticate.
 | `ADMIN_ROLE` | `CWS-Pulse-Admin` |
 
 These are re-written into `/opt/pulse-awards/.env` on **every** deploy — change one here and
-re-run the workflow, no VM login required.
+re-run the workflow, no VM login required. The final app URL is
+`https://cwscx-tst01.cwsey.com/pulse-awards/` — set the admin-configurable "Hall of Fame URL"
+business setting in the admin Settings tab to this address (plus `/charter-champions` or
+`/instant-impact`) once deployed, so the "View Wall of Fame" links in emails point to the right
+place.
 
 ### Secrets (`secrets` — encrypted, never shown again after creation)
 

@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  // Set by CI to the app's URL path prefix on the shared VM (e.g. "/pulse-awards/")
+  // when this app is served under a path rather than its own domain. Local dev and
+  // any future dedicated-domain deploy leave this unset, which defaults to "/".
+  base: process.env.VITE_BASE_PATH || '/',
   server: {
     port: 5173,
     // Bind all interfaces (not just localhost) so the PDF sidecar container can reach

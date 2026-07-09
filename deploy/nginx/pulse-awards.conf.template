@@ -1,58 +1,59 @@
-# CWS Pulse Awards — NGINX site config template.
-# Rendered by scripts/linux/deploy_nginx.sh (placeholders substituted from
-# environment variables), then installed to
-# /etc/nginx/sites-available/pulse-awards.conf.
+# CWS Pulse Awards -- NGINX location-block snippet template.
 #
-# Adapted from docs/01-standards/internal-dev-kit/templates/nginx/app.conf.template
-# — Pulse Awards has a single frontend (no separate dashboard SPA), so the
-# /dashboard/ location block from the generic template is dropped here.
-
-server {
-    listen 80;
-    listen [::]:80;
-    server_name __SERVER_NAME__;
-
-    return 301 https://$host$request_uri;
+# cwscx-tst01 is a shared VM: there is exactly one NGINX server block (owned by
+# the cx-b2b-platform repo's own deploy_nginx.sh, which fully re-renders its
+# /etc/nginx/sites-available/cwscx-staging file on every one of ITS deploys).
+# Pulse Awards therefore does NOT get its own `server { listen 80/443; }` block,
+# its own domain, or its own TLS cert -- 80/443 are already bound by that shared
+# NGINX. Instead, Pulse Awards is mounted as a path (__URL_PATH_PREFIX__) under
+# the shared hostname, the same way /dashboard/, /surveys/*, and /system-check/
+# already are.
+#
+# Rendered by scripts/linux/deploy_nginx.sh into a BEGIN/END-marked block inside
+# /etc/nginx/snippets/cwscx-staging-extra-routes.conf -- a file that is seeded
+# once by cx-b2b-platform's deploy and never re-rendered by it afterwards, and
+# which the shared server block already `include`s unconditionally. See
+# docs/deployment/shared-vm-inventory.md for the full picture.
+location = __URL_PATH_PREFIX__ {
+    return 301 __URL_PATH_PREFIX__/;
 }
 
-server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    server_name __SERVER_NAME__;
+location ^~ __URL_PATH_PREFIX__/api/ {
+    # Preserves the /api/ segment on the backend side (FastAPI routers are
+    # mounted at /api/v1/...) -- only the __URL_PATH_PREFIX__ prefix is stripped.
+    proxy_pass __BACKEND_UPSTREAM__/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 60s;
+    proxy_connect_timeout 10s;
+}
 
-    ssl_certificate __SSL_CERT__;
-    ssl_certificate_key __SSL_KEY__;
+location ^~ __URL_PATH_PREFIX__/brand/ {
+    alias __APP_ROOT__/frontend-dist/brand/;
+    add_header Cache-Control "public, max-age=86400" always;
+}
 
-    add_header X-Content-Type-Options nosniff always;
-    add_header X-Frame-Options SAMEORIGIN always;
-    add_header Referrer-Policy no-referrer-when-downgrade always;
+location ^~ __URL_PATH_PREFIX__/assets/ {
+    alias __APP_ROOT__/frontend-dist/assets/;
+    expires 365d;
+    add_header Cache-Control "public, immutable" always;
+}
 
-    location = / {
-        return 302 /charter-champions;
-    }
+location = __URL_PATH_PREFIX__/index.html {
+    alias __APP_ROOT__/frontend-dist/index.html;
+    add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    add_header Pragma "no-cache" always;
+    add_header Expires "0" always;
+}
 
-    location /brand/ {
-        alias __APP_ROOT__/frontend-dist/brand/;
-        add_header Cache-Control "public, max-age=86400" always;
-    }
-
-    location /api/ {
-        proxy_pass __BACKEND_UPSTREAM__/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
-        proxy_connect_timeout 10s;
-    }
-
-    location / {
-        root __APP_ROOT__/frontend-dist;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
-        add_header Pragma "no-cache" always;
-        add_header Expires "0" always;
-    }
+location __URL_PATH_PREFIX__/ {
+    alias __APP_ROOT__/frontend-dist/;
+    index index.html;
+    add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+    add_header Pragma "no-cache" always;
+    add_header Expires "0" always;
+    try_files $uri $uri/ __URL_PATH_PREFIX__/index.html;
 }

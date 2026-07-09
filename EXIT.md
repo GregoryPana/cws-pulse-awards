@@ -16,30 +16,48 @@ Current status: **Phase 0 baseline verified locally / not production-ready**.
   - Admin users: authorised P&C/admin staff in Entra group/role `CWS-Pulse-Admin`.
   - Programme owner: Maria Pouponneau, CCCO.
   - Technical owner: Gregory Panagary, DTO.
-- Production URL: `https://pulse.cwsey.com` internal network only.
+- Production URL: `https://pulse.cwsey.com` is the long-term target once a dedicated domain/vhost
+  is provisioned. Right now, staging and production both actually run at
+  `https://cwscx-tst01.cwsey.com/pulse-awards/` — a shared VM, path-based, no dedicated domain
+  yet (see §4).
 - Current status: Phase 0 baseline verified locally; not handed over; not approved for production.
 
 ## 2. Environment Model
 
-- Pre-production VM: To be confirmed.
-- Production VM: Dedicated Linux production VM required/target; provisioning to be confirmed.
-- Internal DNS names: `pulse.cwsey.com` planned.
-- TLS certificate approach: Host NGINX TLS termination using CWS internal certificate process; exact certificate paths to be confirmed.
+- Pre-production VM: `cwscx-tst01.cwsey.com` (shared with other apps) — see §4.
+- Production VM: Currently the same shared VM as staging; a dedicated production VM is the
+  long-term target, not yet provisioned.
+- Internal DNS names: `pulse.cwsey.com` planned as a future dedicated domain; not yet in use.
+  Currently reachable only via the shared host's existing `cwscx-tst01.cwsey.com` name.
+- TLS certificate approach: rides on the shared host's existing NGINX TLS termination and
+  certificate (no dedicated Pulse Awards cert yet); a dedicated cert would only be needed
+  alongside a future dedicated domain.
 
 ## 3. Architecture Summary
 
 - Backend: Python 3.12 + FastAPI, SQLAlchemy async, Alembic, managed by systemd on VM host.
-- Frontend(s): React 18 + TypeScript + Vite + Tailwind/shadcn baseline; static build served by host NGINX. Public routes `/charter-champions` and `/instant-impact`; admin routes under `/admin/*`.
-- Reverse proxy: Host NGINX, `/api/` proxied to the backend, frontend static files served from disk.
+- Frontend(s): React 18 + TypeScript + Vite + Tailwind/shadcn baseline; static build served by host NGINX. Public routes `/charter-champions` and `/instant-impact`; admin routes under `/admin/*` — all mounted under `URL_PATH_PREFIX` on shared hosts (see below).
+- Reverse proxy: on `cwscx-tst01` there is no dedicated Pulse Awards vhost/domain/TLS cert —
+  the VM already runs one shared NGINX config (owned by the `cx-b2b-platform` repo's own
+  deploy). Pulse Awards is mounted as a **path** (`/pulse-awards/`) under that shared
+  hostname, the same way `/dashboard/`, `/surveys/*`, and `/system-check/` already are, via a
+  BEGIN/END-marked block this app's own `deploy_nginx.sh` manages inside
+  `/etc/nginx/snippets/cwscx-staging-extra-routes.conf` — a file already `include`d by the
+  shared server block and never re-rendered by the sibling app's own deploys. `/pulse-awards/api/`
+  proxies to the backend, preserving `/api/v1/...` on the backend side.
 - Database: PostgreSQL 16 via Docker Compose, named persistent volume.
 - PDF sidecar: Playwright utility service via Docker Compose, localhost only, no persistent data.
-- **Ports are environment-configurable, not fixed** (`backend/pulse-awards.service` and
-  `docker-compose.yml` both read `BACKEND_PORT`/`DB_PORT`/`PDF_PORT` rather than hardcoding
-  them): local dev defaults to `8000`/`5433`/`8001`, but on `cwscx-tst01` — a VM shared with
-  other apps, whose register reserves `80, 443, 8000, 8010, 5432, 5433, 5051, 7000, 22, 53`
-  across all apps on the box — this app actually runs on `8020`/`5434`/`8001` there. See
-  `docs/deployment/self-hosted-runner-setup.md` §1/§7 for the live values (set as GitHub
-  Environment variables, changeable without VM access).
+- **Ports and the URL path prefix are environment-configurable, not fixed**
+  (`backend/pulse-awards.service`, `docker-compose.yml`, `vite.config.ts`, and
+  `deploy_nginx.sh` all read `BACKEND_PORT`/`DB_PORT`/`PDF_PORT`/`URL_PATH_PREFIX` rather than
+  hardcoding them): local dev defaults to `8000`/`5433`/`8001` with no path prefix (`/`), but
+  on `cwscx-tst01` — a VM shared with other apps, whose reserved ports are
+  `80, 443, 8000, 8010, 5432, 5433, 5051, 7000, 22, 53` — this app actually runs on
+  `8020`/`5434`/`8001` under `/pulse-awards/` there. The authoritative cross-project record of
+  this footprint (and everything else running on that VM) is the Hermes
+  **CWS DTO - Project Environment Register** note, not this repo — keep both in sync whenever
+  ports/routes/service names change. See `docs/deployment/self-hosted-runner-setup.md` §1/§7
+  for the live values (set as GitHub Environment variables, changeable without VM access).
 - Authentication: Microsoft Entra ID; frontend MSAL; backend JWT/JWKS validation and authoritative role enforcement.
 - Monitoring: Health/readiness endpoints required; Uptime Kuma recommended once deployed.
 
@@ -116,8 +134,11 @@ cd .. && ./scripts/linux/verify.sh
 - Application ID URI: Expected `api://<client-id>` unless CWS Entra admin approves another URI.
 - API scope(s): Expected `access_as_user`.
 - Redirect URLs:
-  - `https://pulse.cwsey.com/`
-  - staging/local URLs to be confirmed.
+  - `https://cwscx-tst01.cwsey.com/pulse-awards/` — current staging/production redirect URI
+    (shared VM, path-based; must match `VITE_APP_URL` exactly).
+  - `https://pulse.cwsey.com/` — future dedicated-domain redirect URI, add once that domain
+    and its own vhost/cert exist; not usable yet.
+  - Local dev: `http://127.0.0.1:5173/`.
 - Post-logout URLs: To be confirmed.
 - App roles: `CWS-Pulse-Admin` required for admin API access.
 - Assigned groups: To be confirmed by P&C/IT.

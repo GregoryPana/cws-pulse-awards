@@ -10,6 +10,9 @@ ENVIRONMENT_NAME="${1:?Usage: verify_release.sh <staging|production>}"
 APP_NAME="${APP_NAME:-pulse-awards}"
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 SERVER_NAME="${SERVER_NAME:-pulse.cwsey.com}"
+# Non-empty on a shared VM like cwscx-tst01, where this app is mounted under a
+# path (e.g. /pulse-awards) rather than owning its own domain.
+URL_PATH_PREFIX="${URL_PATH_PREFIX:-}"
 
 echo "== Verifying $APP_NAME ($ENVIRONMENT_NAME) =="
 
@@ -24,11 +27,11 @@ grep -Fq '"db"' /tmp/pulse-awards-verify-ready.json
 # The VM's certificate is self-signed (internal network only) — curl -k is
 # expected and safe here, not a security shortcut for a public endpoint.
 echo "-- Public API through NGINX (self-signed cert, -k expected) --"
-curl -kfsS "https://${SERVER_NAME}/api/v1/health" >/dev/null
+curl -kfsS "https://${SERVER_NAME}${URL_PATH_PREFIX}/api/v1/health" >/dev/null
 
 echo "-- Public Wall of Fame routes through NGINX --"
 for route in "/charter-champions" "/instant-impact" "/admin/entry"; do
-  code="$(curl -k -sS -o /dev/null -w '%{http_code}' "https://${SERVER_NAME}${route}")"
+  code="$(curl -k -sS -o /dev/null -w '%{http_code}' "https://${SERVER_NAME}${URL_PATH_PREFIX}${route}")"
   if [[ "$code" != "200" ]]; then
     echo "Route $route returned HTTP $code, expected 200" >&2
     exit 1

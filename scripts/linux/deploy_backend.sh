@@ -26,6 +26,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APP_NAME="${APP_NAME:-pulse-awards}"
 APP_ROOT="${APP_ROOT:-/opt/$APP_NAME}"
 SERVER_NAME="${SERVER_NAME:-pulse.cwsey.com}"
+URL_PATH_PREFIX="${URL_PATH_PREFIX:-}"
 DB_PORT="${DB_PORT:-5433}"
 ENV_FILE="$APP_ROOT/.env"
 SERVICE_UNIT_SRC="$ROOT_DIR/backend/pulse-awards.service"
@@ -103,9 +104,12 @@ sync_runtime_env_from_ci() {
   upsert_env_value DB_PORT "${DB_PORT:-5433}"
   upsert_env_value PDF_SERVICE_URL "http://127.0.0.1:${PDF_PORT:-8001}"
 
-  # Derived from SERVER_NAME — always kept in sync, never requires its own secret.
-  upsert_env_value APP_BASE_URL "https://${SERVER_NAME}"
-  upsert_env_value PDF_ASSET_BASE_URL "https://${SERVER_NAME}"
+  # Derived from SERVER_NAME + URL_PATH_PREFIX — always kept in sync, never
+  # requires its own secret. URL_PATH_PREFIX is non-empty on shared VMs like
+  # cwscx-tst01 where this app is mounted under a path (e.g. /pulse-awards)
+  # rather than owning its own domain — see shared-vm-inventory.md.
+  upsert_env_value APP_BASE_URL "https://${SERVER_NAME}${URL_PATH_PREFIX}"
+  upsert_env_value PDF_ASSET_BASE_URL "https://${SERVER_NAME}${URL_PATH_PREFIX}"
 
   # Force-false on every deploy, never sourced from a variable — this must
   # never accidentally be true in staging or production.
