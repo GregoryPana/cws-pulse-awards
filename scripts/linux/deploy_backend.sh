@@ -117,11 +117,11 @@ sync_runtime_env_from_ci() {
 }
 
 echo "== Ensuring the $APP_NAME service user exists =="
-id -u pulse &>/dev/null || useradd --system --no-create-home --shell /usr/sbin/nologin pulse
+id -u pulse &>/dev/null || sudo useradd --system --no-create-home --shell /usr/sbin/nologin pulse
 
 echo "== Ensuring photo storage directory exists =="
-mkdir -p /data/pulse/photos
-chown pulse:pulse /data/pulse/photos
+sudo mkdir -p /data/pulse/photos
+sudo chown pulse:pulse /data/pulse/photos
 
 echo "== Preparing $ENV_FILE =="
 bootstrap_env_if_missing
@@ -130,9 +130,9 @@ sync_runtime_env_from_ci
 echo "== Refreshing systemd unit if changed =="
 if ! cmp -s "$SERVICE_UNIT_SRC" "$SERVICE_UNIT_DEST" 2>/dev/null; then
   echo "Unit file changed — installing $SERVICE_UNIT_DEST"
-  cp "$SERVICE_UNIT_SRC" "$SERVICE_UNIT_DEST"
-  systemctl daemon-reload
-  systemctl enable "$APP_NAME"
+  sudo cp "$SERVICE_UNIT_SRC" "$SERVICE_UNIT_DEST"
+  sudo systemctl daemon-reload
+  sudo systemctl enable "$APP_NAME"
 else
   echo "Unit file unchanged."
 fi
@@ -155,7 +155,7 @@ echo "== Running database migrations against the new release =="
 )
 
 echo "== Restarting $APP_NAME =="
-systemctl restart "$APP_NAME"
+sudo systemctl restart "$APP_NAME"
 
 echo "Waiting for backend health endpoint..."
 for _ in $(seq 1 20); do
@@ -167,5 +167,5 @@ for _ in $(seq 1 20); do
 done
 
 echo "Backend did not become healthy in time." >&2
-journalctl -u "$APP_NAME" -n 50 --no-pager >&2
+sudo journalctl -u "$APP_NAME" -n 50 --no-pager >&2
 exit 1

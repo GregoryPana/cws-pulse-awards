@@ -75,9 +75,9 @@ PY
 mv "$TMP_FILE" "$EXTRA_ROUTES_FILE"
 
 echo "== Testing NGINX config =="
-nginx -t
+sudo nginx -t
 
 echo "== Reloading NGINX =="
-systemctl reload nginx
+sudo systemctl reload nginx
 
 echo "NGINX location block installed and reloaded."

@@ -141,6 +141,7 @@ gha-pulse-awards ALL=(root) NOPASSWD: \
   /usr/bin/systemctl daemon-reload, \
   /usr/bin/systemctl enable pulse-awards, \
   /usr/bin/systemctl is-active *, \
+  /usr/bin/journalctl -u pulse-awards *, \
   /usr/sbin/nginx -t, \
   /usr/bin/cp * /etc/systemd/system/*, \
   /usr/sbin/useradd *, \
@@ -149,6 +150,11 @@ gha-pulse-awards ALL=(root) NOPASSWD: \
   /usr/bin/mkdir -p /opt/pulse-awards*, \
   /usr/bin/mkdir -p /data/pulse*
 ```
+
+`deploy_backend.sh` and `deploy_nginx.sh` call `sudo` explicitly for every one of the commands
+above — the runner process itself always runs as unprivileged `gha-pulse-awards`, so any
+privileged step in a deploy script that forgets the `sudo` prefix will fail with
+`Permission denied` (this happened on the first real deploy: `useradd` was missing it).
 
 Adjust exact paths/binaries to match your distro (`which systemctl`, `which nginx`) before saving.
 The runner user also needs plain (non-sudo) write access to
