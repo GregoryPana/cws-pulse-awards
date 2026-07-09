@@ -43,7 +43,7 @@ export default function CwsLogoMark({ variant = 'gold', size = 'md', showName = 
         className={`${sizes.mark} ${colours.mark} flex shrink-0 items-center justify-center rounded-full border bg-white`}
       >
         <img
-          src="/brand/cws-logo.png"
+          src={`${import.meta.env.BASE_URL}brand/cws-logo.png`}
           alt="Cable & Wireless Seychelles logo"
           className="h-full w-full object-contain"
         />
