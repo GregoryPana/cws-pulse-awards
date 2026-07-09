@@ -44,18 +44,20 @@ RENDERED_BLOCK="$(sed \
   "$TEMPLATE")"
 
 echo "== Updating $EXTRA_ROUTES_FILE (idempotent, marker-scoped) =="
-TMP_FILE="$(mktemp)"
+# Written in place (not via a temp-file + mv swap): the runner user only has
+# group write access to this FILE (chmod g+w, per the runner-setup guide), not
+# to its parent directory /etc/nginx/snippets/ (owned by cx-b2b-platform's
+# deploy), so a rename/replace into that directory would fail with
+# "Permission denied" even though writing the file's own contents succeeds.
 EXTRA_ROUTES_FILE="$EXTRA_ROUTES_FILE" BEGIN_MARKER="$BEGIN_MARKER" END_MARKER="$END_MARKER" RENDERED_BLOCK="$RENDERED_BLOCK" \
-  python3 - "$TMP_FILE" <<'PY'
+  python3 <<'PY'
 import os
-import sys
 from pathlib import Path
 
 file_path = Path(os.environ["EXTRA_ROUTES_FILE"])
 begin_marker = os.environ["BEGIN_MARKER"]
 end_marker = os.environ["END_MARKER"]
 rendered_block = os.environ["RENDERED_BLOCK"]
-tmp_path = Path(sys.argv[1])
 
 existing = file_path.read_text(encoding="utf-8")
 new_block = f"{begin_marker}\n{rendered_block.rstrip()}\n{end_marker}\n"
@@ -69,10 +71,8 @@ else:
     spacer = "\n" if existing.strip() else ""
     output = existing + separator + spacer + new_block
 
-tmp_path.write_text(output, encoding="utf-8")
+file_path.write_text(output, encoding="utf-8")
 PY
-
-mv "$TMP_FILE" "$EXTRA_ROUTES_FILE"
 
 echo "== Testing NGINX config =="
 sudo nginx -t
