@@ -36,9 +36,10 @@ Current status: **Phase 0 baseline verified locally / not production-ready**.
 - **Ports are environment-configurable, not fixed** (`backend/pulse-awards.service` and
   `docker-compose.yml` both read `BACKEND_PORT`/`DB_PORT`/`PDF_PORT` rather than hardcoding
   them): local dev defaults to `8000`/`5433`/`8001`, but on `cwscx-tst01` — a VM shared with
-  other apps — `8000` and `5433` were already taken, so this app actually runs on
-  `8010`/`5434`/`8001` there. See `docs/deployment/self-hosted-runner-setup.md` §7 for the
-  live values (set as GitHub Environment variables, changeable without VM access).
+  other apps, whose register reserves `80, 443, 8000, 8010, 5432, 5433, 5051, 7000, 22, 53`
+  across all apps on the box — this app actually runs on `8020`/`5434`/`8001` there. See
+  `docs/deployment/self-hosted-runner-setup.md` §1/§7 for the live values (set as GitHub
+  Environment variables, changeable without VM access).
 - Authentication: Microsoft Entra ID; frontend MSAL; backend JWT/JWKS validation and authoritative role enforcement.
 - Monitoring: Health/readiness endpoints required; Uptime Kuma recommended once deployed.
 

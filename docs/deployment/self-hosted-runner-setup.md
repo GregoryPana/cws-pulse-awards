@@ -28,20 +28,29 @@ app on this VM its own runner the same way — one runner process per app, never
 systemctl list-units --all | grep -i actions.runner
 ls -la /opt/actions-runners/ 2>/dev/null
 
-# Ports Pulse Awards needs (backend 8000, Postgres 5433, PDF sidecar 8001)
-ss -tlnp | grep -E ':(8000|5433|8001)\b' || echo "all three ports are free"
+# Ports Pulse Awards needs (backend, Postgres, PDF sidecar)
+ss -tlnp | grep -E ':(8020|5434|8001)\b' || echo "8020, 5434, 8001 are all free"
 ```
 
-**Confirmed conflict on this VM**: ports `8000` and `5433` are already held by other apps
-(`b2b-cx-platform` and/or `vas-system-check`) — nothing on Pulse Awards can use those numbers.
-Port `8001` was free. Pulse Awards uses `8010` (backend) and `5434` (Postgres) instead —
-double-check those are actually free too before proceeding:
+**Confirmed reserved on this VM (`cwscx-tst01`)** — this list comes from the VM register, shared
+across every app on the box (Pulse Awards, `b2b-cx-platform`/`vas-system-check`, and the Health
+Fair testing app), so none of these numbers are available to any new app regardless of what a
+live `ss` check shows at any given moment:
+
+```
+80, 443, 8000, 8010, 5432, 5433, 5051, 7000, 22, 53
+```
+
+Both `8000` and `8010` are taken — the original plan to move Pulse Awards' backend to `8010`
+after the first conflict is itself now blocked, so Pulse Awards uses **`8020`** (backend) and
+**`5434`** (Postgres) instead. Neither appears in the reserved list above. Port `8001` (PDF
+sidecar) remains free. Double-check all three are actually free right now before proceeding:
 
 ```bash
-ss -tlnp | grep -E ':(8010|5434|8001)\b' || echo "8010, 5434, 8001 are all free"
+ss -tlnp | grep -E ':(8020|5434|8001)\b' || echo "8020, 5434, 8001 are all free"
 ```
 
-If those are also free, the `BACKEND_PORT=8010` / `DB_PORT=5434` GitHub Environment variables
+If those are also free, the `BACKEND_PORT=8020` / `DB_PORT=5434` GitHub Environment variables
 (§7) are already set to match — no repo file changes are needed, since every script and the
 systemd unit read these ports from `.env`/environment rather than a hardcoded value.
 `scripts/linux/check_ports.sh` re-runs this same check automatically on every deploy, so a
@@ -174,7 +183,7 @@ would just make one of the two deploys fail to authenticate.
 | Variable | Value |
 |---|---|
 | `APP_ROOT` | `/opt/pulse-awards` |
-| `BACKEND_PORT` | `8010` *(not 8000 — already taken by another app on this VM)* |
+| `BACKEND_PORT` | `8020` *(8000 and 8010 are both reserved/taken on this VM)* |
 | `DB_PORT` | `5434` *(not 5433 — already taken by another app on this VM)* |
 | `PDF_PORT` | `8001` |
 | `SERVER_NAME` | `pulse.cwsey.com` |
