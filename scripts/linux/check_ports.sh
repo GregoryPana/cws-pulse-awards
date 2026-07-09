@@ -25,7 +25,11 @@ fail() {
 
 port_owner_pid() {
   local port="$1"
-  ss -tlnp "sport = :${port}" 2>/dev/null | awk 'NR>1 {print $NF}' | grep -oE 'pid=[0-9]+' | head -n1 | cut -d= -f2
+  # `|| true` at the end matters: when the port is free, ss produces nothing
+  # for grep to match, so grep exits 1 — under `pipefail` that would otherwise
+  # propagate through head/cut and trip `set -e`, killing the whole script
+  # before it ever reaches the "port is free" case.
+  ss -tlnp "sport = :${port}" 2>/dev/null | awk 'NR>1 {print $NF}' | grep -oE 'pid=[0-9]+' | head -n1 | cut -d= -f2 || true
 }
 
 check_backend_port() {
