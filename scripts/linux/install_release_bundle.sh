@@ -31,11 +31,18 @@ cp -r "$ROOT_DIR/pdf_service" "$RELEASE_DIR/pdf_service"
 echo "Linking shared, non-versioned config into the release..."
 ln -sfn "$APP_ROOT/.env" "$RELEASE_DIR/backend/.env"
 
-echo "Flipping backend/ and frontend-dist/ to the new release..."
+echo "Flipping backend/, frontend-dist/, pdf_service/ and docker-compose.yml to the new release..."
 ln -sfn "$RELEASE_DIR/backend" "$APP_ROOT/backend.new"
 mv -Tf "$APP_ROOT/backend.new" "$APP_ROOT/backend"
 ln -sfn "$RELEASE_DIR/frontend-dist" "$APP_ROOT/frontend-dist.new"
 mv -Tf "$APP_ROOT/frontend-dist.new" "$APP_ROOT/frontend-dist"
+# docker-compose.yml's playwright service uses a relative build context
+# (./pdf_service), resolved against $APP_ROOT (where the compose symlink
+# lives), not the release directory — so pdf_service needs the same
+# symlink-flip treatment or `docker compose build` fails with
+# "unable to prepare context: path .../pdf_service not found".
+ln -sfn "$RELEASE_DIR/pdf_service" "$APP_ROOT/pdf_service.new"
+mv -Tf "$APP_ROOT/pdf_service.new" "$APP_ROOT/pdf_service"
 ln -sfn "$RELEASE_DIR/docker-compose.yml" "$APP_ROOT/docker-compose.yml.new"
 mv -Tf "$APP_ROOT/docker-compose.yml.new" "$APP_ROOT/docker-compose.yml"
 
