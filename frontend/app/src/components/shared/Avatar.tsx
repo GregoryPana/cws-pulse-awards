@@ -39,6 +39,8 @@ export default function Avatar({
         src={photoUrl}
         alt={`${firstName} ${lastName}`}
         className={`${size} rounded-full object-cover flex-shrink-0 ${ring}`}
+        loading={featured ? 'eager' : 'lazy'}
+        decoding="async"
       />
     )
   }

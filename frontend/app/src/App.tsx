@@ -1,9 +1,13 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
 import { InteractionStatus } from '@azure/msal-browser'
 import CharterChampions from './pages/CharterChampions'
 import InstantImpact from './pages/InstantImpact'
-import AdminEntry from './pages/admin/AdminEntry'
+
+// Code-split: admin (forms, tables, radix components) is only needed by staff,
+// not the public wall visitors most mobile traffic is — keep it out of their bundle.
+const AdminEntry = lazy(() => import('./pages/admin/AdminEntry'))
 
 /**
  * MSAL's post-login redirect lands the browser back on the app root before
@@ -30,7 +34,14 @@ export default function App() {
       <Routes>
         <Route path="/charter-champions" element={<CharterChampions />} />
         <Route path="/instant-impact" element={<InstantImpact />} />
-        <Route path="/admin/entry" element={<AdminEntry />} />
+        <Route
+          path="/admin/entry"
+          element={
+            <Suspense fallback={null}>
+              <AdminEntry />
+            </Suspense>
+          }
+        />
         <Route path="*" element={<CatchAll />} />
       </Routes>
     </BrowserRouter>

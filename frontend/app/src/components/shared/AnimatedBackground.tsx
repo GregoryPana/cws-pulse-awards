@@ -41,15 +41,19 @@ export default function AnimatedBackground({ variant }: Props) {
           backgroundSize: '60px 60px',
         }}
       />
+      {/*
+       * Blur radius is halved below the `sm` breakpoint and the drift
+       * animation only runs at `sm` and up — large blurred layers are
+       * expensive to rasterize on mobile GPUs, and this is purely decorative.
+       */}
       {cfg.orbs.map((orb, i) => (
         <div
           key={i}
-          className={`absolute rounded-full animate-drift ${orb.pos}`}
+          className={`absolute rounded-full blur-[45px] sm:blur-[90px] sm:animate-drift will-change-transform ${orb.pos}`}
           style={{
             width: orb.size,
             height: orb.size,
             background: orb.bg,
-            filter: 'blur(90px)',
             animationDelay: orb.delay,
           }}
         />

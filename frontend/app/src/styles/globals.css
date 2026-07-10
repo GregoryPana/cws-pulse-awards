@@ -81,6 +81,14 @@ body {
   }
 }
 
+/* Continuous decorative spin is disabled below `sm` — a static beam looks fine
+   on phones and avoids an infinite compositor tick on lower-powered GPUs. */
+@media (max-width: 639px) {
+  .border-trace::before {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
