@@ -38,8 +38,8 @@ export const emptyPayload = (): WinnerCreatePayload => {
     job_title: '',
     department: '',
     subcategory: '',
-    charter_pillar: '',
-    company_value: '',
+    charter_pillars: [],
+    company_values: [],
     story: '',
     nominated_by: '',
     award_month: `${MONTHS_SHORT[currentMonthIndex()]} ${currentYear()}`,
@@ -55,8 +55,8 @@ export const payloadFromWinner = (winner: WinnerAdmin): WinnerCreatePayload => (
   job_title: winner.job_title,
   department: winner.department,
   subcategory: winner.subcategory,
-  charter_pillar: winner.charter_pillar,
-  company_value: winner.company_value,
+  charter_pillars: winner.charter_pillars,
+  company_values: winner.company_values,
   story: winner.story,
   nominated_by: winner.nominated_by,
   award_month: winner.award_month,
@@ -104,8 +104,16 @@ export const withConfigDefaults = (
   config: AwardConfig,
 ): WinnerCreatePayload => ({
   ...payload,
-  charter_pillar: payload.charter_pillar || config.pillars[0]?.name || '',
-  company_value: payload.company_value || config.values[0]?.name || '',
+  charter_pillars: payload.charter_pillars.length
+    ? payload.charter_pillars
+    : config.pillars[0]
+      ? [config.pillars[0].name]
+      : [],
+  company_values: payload.company_values.length
+    ? payload.company_values
+    : config.values[0]
+      ? [config.values[0].name]
+      : [],
   subcategory: config.subcategories.some((item) => item.name === payload.subcategory)
     ? payload.subcategory
     : config.subcategories[0]?.name || '',
@@ -117,14 +125,17 @@ const REQUIRED_FIELDS: { key: keyof WinnerCreatePayload; label: string }[] = [
   { key: 'job_title', label: 'Job title' },
   { key: 'department', label: 'Department' },
   { key: 'subcategory', label: 'Award category' },
-  { key: 'charter_pillar', label: 'Charter pillar' },
-  { key: 'company_value', label: 'Company value' },
+  { key: 'charter_pillars', label: 'Charter pillar' },
+  { key: 'company_values', label: 'Company value' },
   { key: 'story', label: 'Recognition story' },
 ]
 
+const isFieldFilled = (value: WinnerCreatePayload[keyof WinnerCreatePayload]): boolean =>
+  Array.isArray(value) ? value.length > 0 : Boolean(String(value ?? '').trim())
+
 /** Friendly names of required fields that are still empty. */
 export const missingFields = (payload: WinnerCreatePayload): string[] =>
-  REQUIRED_FIELDS.filter(({ key }) => !String(payload[key] ?? '').trim()).map(({ label }) => label)
+  REQUIRED_FIELDS.filter(({ key }) => !isFieldFilled(payload[key])).map(({ label }) => label)
 
 /** Debounced live email preview rendered from the in-progress payload. */
 export function useLivePreview(
@@ -227,6 +238,55 @@ export function SelectField({
           ))}
         </SelectContent>
       </Select>
+    </Field>
+  )
+}
+
+export function MultiSelectField({
+  label,
+  required,
+  done,
+  hint,
+  values,
+  onValuesChange,
+  options,
+}: {
+  label: string
+  required?: boolean
+  done?: boolean
+  hint?: string
+  values: string[]
+  onValuesChange: (values: string[]) => void
+  options: { value: string; label: string }[]
+}) {
+  const toggle = (option: string) => {
+    onValuesChange(
+      values.includes(option) ? values.filter((item) => item !== option) : [...values, option],
+    )
+  }
+
+  return (
+    <Field label={label} required={required} done={done} hint={hint}>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const isSelected = values.includes(option.value)
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={isSelected}
+              onClick={() => toggle(option.value)}
+              className={`rounded-badge border px-3 py-1.5 font-label text-[11px] font-semibold tracking-wide transition ${
+                isSelected
+                  ? 'border-gold/40 bg-gold/15 text-gold-soft'
+                  : 'border-white/[0.09] bg-white/[0.03] text-white/50 hover:border-white/20 hover:text-white/70'
+              }`}
+            >
+              {option.label}
+            </button>
+          )
+        })}
+      </div>
     </Field>
   )
 }
@@ -337,20 +397,25 @@ export function WinnerFormFields({
           onValueChange={(value) => onChange('subcategory', value)}
           options={config.subcategories.map((item) => ({ value: item.name, label: item.name }))}
         />
-        <SelectField
+      </div>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <MultiSelectField
           label="Charter pillar"
           required
-          done={filled(payload.charter_pillar)}
-          value={payload.charter_pillar}
-          onValueChange={(value) => onChange('charter_pillar', value)}
+          done={payload.charter_pillars.length > 0}
+          hint="Select every pillar this recognition touches on — most awards need just one, but pick more if it applies."
+          values={payload.charter_pillars}
+          onValuesChange={(values) => onChange('charter_pillars', values)}
           options={config.pillars.map((item) => ({ value: item.name, label: item.name }))}
         />
-        <SelectField
+        <MultiSelectField
           label="Company value"
           required
-          done={filled(payload.company_value)}
-          value={payload.company_value}
-          onValueChange={(value) => onChange('company_value', value)}
+          done={payload.company_values.length > 0}
+          hint="Select every company value this recognition touches on."
+          values={payload.company_values}
+          onValuesChange={(values) => onChange('company_values', values)}
           options={config.values.map((item) => ({ value: item.name, label: item.name }))}
         />
       </div>

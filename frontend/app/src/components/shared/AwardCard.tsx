@@ -66,7 +66,7 @@ function FoilSheen() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-y-0 left-0 z-10 w-1/3 animate-sheen bg-gradient-to-r from-transparent via-gold-soft/[0.10] to-transparent"
+      className="pointer-events-none absolute inset-y-0 left-0 z-10 w-1/3 sm:animate-sheen bg-gradient-to-r from-transparent via-gold-soft/[0.10] to-transparent"
     />
   )
 }
@@ -74,16 +74,16 @@ function FoilSheen() {
 function FloatingSparkles() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
-      <span className="absolute right-6 top-5 animate-floaty text-gold-soft/80">
+      <span className="absolute right-6 top-5 sm:animate-floaty text-gold-soft/80">
         <HugeiconsIcon icon={SparklesIcon} size={18} strokeWidth={1.6} />
       </span>
-      <span className="absolute right-16 top-12 animate-floaty text-gold/60 [animation-delay:1.4s]">
+      <span className="absolute right-16 top-12 sm:animate-floaty text-gold/60 [animation-delay:1.4s]">
         <HugeiconsIcon icon={SparklesIcon} size={12} strokeWidth={1.6} />
       </span>
       {/* Kept close to the card's left edge (not bottom-8) so it never lands on top of the
           "Nominated by" line, which sits at the bottom of the left column in both the
           stacked (mobile) and two-column (desktop) layouts. */}
-      <span className="absolute left-2 top-1/2 -translate-y-1/2 animate-floaty text-gold/50 [animation-delay:2.6s]">
+      <span className="absolute left-2 top-1/2 -translate-y-1/2 sm:animate-floaty text-gold/50 [animation-delay:2.6s]">
         <HugeiconsIcon icon={SparklesIcon} size={14} strokeWidth={1.6} />
       </span>
     </div>
@@ -99,9 +99,15 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
     return (
       <div
         data-card
-        className="group col-span-full rounded-card bg-[linear-gradient(120deg,#A87E1F,#F7D88C,#D6A933,#F7D88C,#A87E1F)] bg-[length:240%_240%] p-[1.5px] animate-foilShift transition-transform duration-300 ease-out hover:-translate-y-1.5 hover:scale-[1.005]"
+        className="group col-span-full rounded-card bg-[linear-gradient(120deg,#A87E1F,#F7D88C,#D6A933,#F7D88C,#A87E1F)] bg-[length:240%_240%] p-[1.5px] sm:animate-foilShift transition-transform duration-300 ease-out hover:-translate-y-1.5 hover:scale-[1.005]"
       >
-        <article className="relative grid grid-cols-1 gap-0 overflow-hidden rounded-[9px] bg-gradient-to-br from-[#0E1A2C] to-[#151006] animate-glowGold cursor-default md:grid-cols-2">
+        {/*
+         * `glowGold`/`foilShift` animate box-shadow/background-position, which force a
+         * repaint every frame rather than compositing on the GPU — both are gated to
+         * `sm:` and up so phones get a static (still fully legible) foil card instead
+         * of a continuous main-thread cost.
+         */}
+        <article className="relative grid grid-cols-1 gap-0 overflow-hidden rounded-[9px] bg-gradient-to-br from-[#0E1A2C] to-[#151006] shadow-xl shadow-black/30 sm:animate-glowGold cursor-default md:grid-cols-2">
           <span
             aria-hidden="true"
             className="border-trace border-trace--golden z-20"
@@ -142,7 +148,11 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
                 </p>
               </div>
             </div>
-            <PillarTag pillar={winner.charter_pillar} variant="golden" />
+            <div className="flex flex-wrap gap-2">
+              {winner.charter_pillars.map((pillar) => (
+                <PillarTag key={pillar} pillar={pillar} variant="golden" />
+              ))}
+            </div>
             <p className="mt-4 border-t border-gold/15 pt-3 text-[11.5px] text-white/35">
               Nominated by{' '}
               <strong className="font-medium text-gold-soft/80">
@@ -223,7 +233,11 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
           </div>
         </div>
 
-        <PillarTag pillar={winner.charter_pillar} variant={variant} />
+        <div className="flex flex-wrap gap-2">
+          {winner.charter_pillars.map((pillar) => (
+            <PillarTag key={pillar} pillar={pillar} variant={variant} />
+          ))}
+        </div>
 
         <div className="relative mt-3.5 border-t border-white/5 pt-3.5">
           <span

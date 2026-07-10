@@ -26,9 +26,18 @@
             <tr><td style="background:#F0FDF7; padding:24px 24px 22px;">
               <h2 style="margin:0 0 4px; font-family:Georgia, 'Times New Roman', serif; font-size:28px; line-height:32px; font-weight:700; color:#0A2240;">{{ winner_first_name }} {{ winner_last_name }}</h2>
               <p style="margin:0 0 18px; font-size:13px; line-height:20px; color:#6B8099;">{{ winner_job_title }} &mdash; {{ winner_department }}</p>
-              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr><td style="background:#0A2240; border:1px solid #10B981; border-radius:6px; padding:7px 10px; color:#34D399; font-size:12px; line-height:16px; font-weight:700;">Pillar: {{ charter_pillar }}</td></tr></table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr>
+                <td style="width:50%; padding:12px 16px; background:#0A2240; border:1px solid #10B981; border-radius:6px 0 0 6px; vertical-align:top;">
+                  <div style="font-size:9px; line-height:13px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:#34D399; margin-bottom:6px;">Charter Pillar{{ 's' if charter_pillars|length > 1 else '' }}</div>
+                  {% for pillar in charter_pillars %}<div style="font-size:12px; line-height:18px; color:#FFFFFF; font-weight:700;">{{ pillar }}</div>{% endfor %}
+                </td>
+                <td style="width:50%; padding:12px 16px; background:#0A2240; border:1px solid #10B981; border-left:none; border-radius:0 6px 6px 0; vertical-align:top;">
+                  <div style="font-size:9px; line-height:13px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:#34D399; margin-bottom:6px;">Company Value{{ 's' if company_values|length > 1 else '' }}</div>
+                  {% for value in company_values %}<div style="font-size:12px; line-height:18px; color:#FFFFFF; font-weight:700;">{{ value }}</div>{% endfor %}
+                </td>
+              </tr></table>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF; border-left:4px solid #10B981;"><tr><td style="padding:18px 20px;"><div style="font-family:Georgia, 'Times New Roman', serif; font-size:42px; line-height:28px; color:#047857;">&ldquo;</div><p style="margin:0; font-size:15px; line-height:26px; font-style:italic; color:#2D3748;">{{ story }}</p></td></tr></table>
-              <p style="margin:18px 0 0; padding-top:14px; border-top:1px solid #B7EDD5; font-size:12px; line-height:18px; color:#6B8099;">Recognised by <strong style="color:#0A2240;">{{ nominated_by }}</strong> &nbsp;|&nbsp; Company value: <strong style="color:#0A2240;">{{ company_value }}</strong></p>
+              <p style="margin:18px 0 0; padding-top:14px; border-top:1px solid #B7EDD5; font-size:12px; line-height:18px; color:#6B8099;">Recognised by <strong style="color:#0A2240;">{{ nominated_by }}</strong></p>
             </td></tr>
           </table>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px; background:#0A2240; border-radius:10px;"><tr><td align="center" style="padding:22px 24px;"><p style="margin:0 0 16px; font-size:14px; line-height:22px; color:#BDD3E8;">View this manager recognition on the CWS Pulse Awards Hall of Fame.</p><a href="{{ hall_of_fame_url }}" style="display:inline-block; background:#10B981; color:#FFFFFF; text-decoration:none; padding:11px 22px; border-radius:8px; font-size:13px; line-height:16px; font-weight:700; letter-spacing:.4px;">Open Hall of Fame</a></td></tr></table>

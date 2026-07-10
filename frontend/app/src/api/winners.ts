@@ -8,8 +8,8 @@ export interface WinnerPublic {
   department: string
   award_type: string
   subcategory: string
-  charter_pillar: string
-  company_value: string
+  charter_pillars: string[]
+  company_values: string[]
   story: string
   nominated_by: string | null
   award_month: string

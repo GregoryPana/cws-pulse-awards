@@ -174,8 +174,8 @@
 
       <p class="body-text">
         In recognition of <strong>{{ subcategory }}</strong>, demonstrating
-        <strong>{{ charter_pillar }}</strong> and living the company value of
-        <strong>{{ company_value }}</strong> &mdash; nominated by a colleague who witnessed it firsthand.
+        <strong>{{ charter_pillars_text }}</strong> and living the company value{{ 's' if company_values|length > 1 else '' }} of
+        <strong>{{ company_values_text }}</strong> &mdash; nominated by a colleague who witnessed it firsthand.
       </p>
       <p class="story">&ldquo;{{ story }}&rdquo;</p>
 

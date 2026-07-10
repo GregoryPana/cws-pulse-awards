@@ -52,8 +52,8 @@ class FakeWinner:
     job_title = "Engineer"
     department = "Tech"
     subcategory = "Collaboration Catalyst"
-    charter_pillar = "Accountability"
-    company_value = "Team"
+    charter_pillars = ["Accountability"]
+    company_values = ["Team"]
     story = "Great work"
     nominated_by = "A colleague"
     photo_url = None

@@ -21,8 +21,8 @@ class FakeWinner:
     job_title = "Customer Service Advisor"
     department = "Customer Operations"
     subcategory = "Collaboration Catalyst"
-    charter_pillar = "Professionalism & Respect"
-    company_value = "Customer"
+    charter_pillars = ["Professionalism & Respect"]
+    company_values = ["Customer"]
     story = "Marie helped a customer resolve a complex billing issue with care."
     nominated_by = "A colleague"
     photo_url = None
@@ -92,8 +92,8 @@ def winner_payload() -> dict[str, Any]:
         "job_title": "Customer Service Advisor",
         "department": "Customer Operations",
         "subcategory": "Collaboration Catalyst",
-        "charter_pillar": "Professionalism & Respect",
-        "company_value": "Customer",
+        "charter_pillars": ["Professionalism & Respect"],
+        "company_values": ["Customer"],
         "story": "Marie helped a customer resolve a complex billing issue with care.",
         "nominated_by": "A colleague",
         "award_month": "Jun 2026",

@@ -47,7 +47,7 @@ def test_alembic_upgrade_head_and_seed_counts() -> None:
                 winner_count,
             ) = cursor.fetchone()
 
-    assert pillars == 8
+    assert pillars == 9  # includes the "Ethics" pillar added by migration 003
     assert values == 5
     assert subcategories == 6
     assert settings_count >= 1

@@ -18,8 +18,8 @@ class WinnerCreate(BaseModel):
     job_title: str = Field(min_length=1, max_length=200)
     department: str = Field(min_length=1, max_length=200)
     subcategory: str = Field(min_length=1, max_length=200)
-    charter_pillar: str = Field(min_length=1, max_length=200)
-    company_value: str = Field(min_length=1, max_length=100)
+    charter_pillars: list[str] = Field(min_length=1)
+    company_values: list[str] = Field(min_length=1)
     story: str = Field(min_length=1)
     nominated_by: str | None = Field(default=None, max_length=200)
     award_month: str = Field(min_length=1, max_length=20)
@@ -40,8 +40,8 @@ class WinnerPublic(BaseModel):
     job_title: str
     department: str
     subcategory: str
-    charter_pillar: str
-    company_value: str
+    charter_pillars: list[str]
+    company_values: list[str]
     story: str
     nominated_by: str | None
     photo_url: str | None

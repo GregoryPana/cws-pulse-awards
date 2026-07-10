@@ -22,8 +22,8 @@ class FakeWinner:
     department = "Customer Operations"
     award_type = "CHARTER_CHAMPION"
     subcategory = "Collaboration Catalyst"
-    charter_pillar = "Proactive Problem Solving, Urgency & Ownership"
-    company_value = "Accountability"
+    charter_pillars = ["Proactive Problem Solving, Urgency & Ownership"]
+    company_values = ["Accountability"]
     story = "Tania did great work."
     nominated_by = "Maria Pouponneau"
     photo_url = None
@@ -295,8 +295,8 @@ def test_email_preview_returns_html_and_subject() -> None:
         department = "Customer Operations"
         award_type = "CHARTER_CHAMPION"
         subcategory = "Collaboration Catalyst"
-        charter_pillar = "Proactive Problem Solving, Urgency & Ownership"
-        company_value = "Accountability"
+        charter_pillars = ["Proactive Problem Solving, Urgency & Ownership"]
+        company_values = ["Accountability"]
         story = "Tania did great work."
         nominated_by = "Maria Pouponneau"
         photo_url = None

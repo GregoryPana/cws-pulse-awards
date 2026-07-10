@@ -18,6 +18,7 @@ from app.services.certificate_renderer import render_certificate
 from app.services.email_renderer import render_email
 from app.services.email_service import send_templated_email
 from app.services.pdf_service import render_certificate_pdf
+from app.services.text_format import natural_join
 
 router = APIRouter(prefix="/api/v1", tags=["admin-winners"])
 
@@ -93,8 +94,10 @@ def _award_email_context(winner: Winner, settings: dict[str, str | None]) -> dic
         "winner_department": winner.department,
         "award_type_label": _award_type_label(winner.award_type),
         "subcategory": winner.subcategory,
-        "charter_pillar": winner.charter_pillar,
-        "company_value": winner.company_value,
+        "charter_pillars": winner.charter_pillars,
+        "company_values": winner.company_values,
+        "charter_pillars_text": natural_join(winner.charter_pillars),
+        "company_values_text": natural_join(winner.company_values),
         "story": winner.story,
         "nominated_by": winner.nominated_by or "A colleague",
         "award_month": winner.award_month,
@@ -166,8 +169,10 @@ async def preview_award_email_from_payload(
         "winner_department": payload.department,
         "award_type_label": _award_type_label(payload.award_type),
         "subcategory": payload.subcategory,
-        "charter_pillar": payload.charter_pillar,
-        "company_value": payload.company_value,
+        "charter_pillars": payload.charter_pillars,
+        "company_values": payload.company_values,
+        "charter_pillars_text": natural_join(payload.charter_pillars),
+        "company_values_text": natural_join(payload.company_values),
         "story": payload.story,
         "nominated_by": payload.nominated_by or "A colleague",
         "award_month": payload.award_month,
@@ -198,8 +203,8 @@ async def create_admin_winner(
         job_title=payload.job_title,
         department=payload.department,
         subcategory=payload.subcategory,
-        charter_pillar=payload.charter_pillar,
-        company_value=payload.company_value,
+        charter_pillars=payload.charter_pillars,
+        company_values=payload.company_values,
         story=payload.story,
         nominated_by=payload.nominated_by,
         photo_url=payload.photo_url,
@@ -252,8 +257,8 @@ async def update_admin_winner(
     winner.job_title = payload.job_title
     winner.department = payload.department
     winner.subcategory = payload.subcategory
-    winner.charter_pillar = payload.charter_pillar
-    winner.company_value = payload.company_value
+    winner.charter_pillars = payload.charter_pillars
+    winner.company_values = payload.company_values
     winner.story = payload.story
     winner.nominated_by = payload.nominated_by
     winner.photo_url = payload.photo_url

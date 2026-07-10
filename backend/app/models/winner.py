@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, String, Text, func
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -12,7 +13,11 @@ class Winner(Base):
     """Published, archived, or removed award winner row."""
 
     __tablename__ = "winners"
-    __table_args__ = (CheckConstraint("top_five_rank BETWEEN 1 AND 5", name="winners_top_five_rank_check"),)
+    __table_args__ = (
+        CheckConstraint("top_five_rank BETWEEN 1 AND 5", name="winners_top_five_rank_check"),
+        CheckConstraint("array_length(charter_pillars, 1) >= 1", name="winners_charter_pillars_nonempty_check"),
+        CheckConstraint("array_length(company_values, 1) >= 1", name="winners_company_values_nonempty_check"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     award_type: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -21,8 +26,8 @@ class Winner(Base):
     job_title: Mapped[str] = mapped_column(String(200), nullable=False)
     department: Mapped[str] = mapped_column(String(200), nullable=False)
     subcategory: Mapped[str] = mapped_column(String(200), nullable=False)
-    charter_pillar: Mapped[str] = mapped_column(String(200), nullable=False)
-    company_value: Mapped[str] = mapped_column(String(100), nullable=False)
+    charter_pillars: Mapped[list[str]] = mapped_column(ARRAY(String(200)), nullable=False)
+    company_values: Mapped[list[str]] = mapped_column(ARRAY(String(100)), nullable=False)
     story: Mapped[str] = mapped_column(Text, nullable=False)
     nominated_by: Mapped[str | None] = mapped_column(String(200))
     photo_url: Mapped[str | None] = mapped_column(String(500))

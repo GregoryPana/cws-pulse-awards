@@ -8,8 +8,8 @@ export interface WinnerCreatePayload {
   job_title: string
   department: string
   subcategory: string
-  charter_pillar: string
-  company_value: string
+  charter_pillars: string[]
+  company_values: string[]
   story: string
   nominated_by?: string | null
   award_month: string

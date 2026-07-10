@@ -19,6 +19,7 @@ from app.services.certificate_renderer import render_certificate
 from app.services.email_renderer import render_email
 from app.services.email_service import send_templated_email
 from app.services.pdf_service import render_certificate_pdf
+from app.services.text_format import natural_join
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +98,10 @@ def _golden_ticket_context(winner: Winner, config_rows: dict[str, str | None]) -
         "winner_department": winner.department,
         "award_type_label": award_type_label,
         "subcategory": winner.subcategory,
-        "charter_pillar": winner.charter_pillar,
-        "company_value": winner.company_value,
+        "charter_pillars": winner.charter_pillars,
+        "company_values": winner.company_values,
+        "charter_pillars_text": natural_join(winner.charter_pillars),
+        "company_values_text": natural_join(winner.company_values),
         "story": winner.story,
         "nominated_by": nominated_by,
         "award_month": winner.award_month,
