@@ -114,6 +114,22 @@ sync_runtime_env_from_ci() {
   # Force-false on every deploy, never sourced from a variable — this must
   # never accidentally be true in staging or production.
   upsert_env_value DEV_AUTH_ENABLED "false"
+
+  # Synced every deploy, not just at first bootstrap: the Entra app registration
+  # is typically created AFTER this app's first deploy (chicken-and-egg — you
+  # need a live redirect URI to register against), so a bootstrap-only write
+  # would silently leave ENTRA_TENANT_ID/ENTRA_CLIENT_ID blank forever once
+  # .env already exists. Re-writing the same GitHub secret value every deploy
+  # is idempotent and keeps this manageable from GitHub alone, no VM login.
+  if [[ -n "${ENTRA_TENANT_ID:-}" ]]; then
+    upsert_env_value ENTRA_TENANT_ID "$ENTRA_TENANT_ID"
+    upsert_env_value ENTRA_AUTHORITY "https://login.microsoftonline.com/${ENTRA_TENANT_ID}"
+    upsert_env_value ENTRA_ISSUER "https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0"
+  fi
+  if [[ -n "${ENTRA_CLIENT_ID:-}" ]]; then
+    upsert_env_value ENTRA_CLIENT_ID "$ENTRA_CLIENT_ID"
+    upsert_env_value ENTRA_AUDIENCE "api://${ENTRA_CLIENT_ID}"
+  fi
 }
 
 echo "== Ensuring the $APP_NAME service user exists =="
