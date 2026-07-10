@@ -12,14 +12,18 @@ export function useAuth() {
 
   const signIn = useCallback(() => {
     if (devAuthEnabled) return
-    void instance.loginRedirect(loginRequest)
+    // redirectUri is fixed to the app root to match what's registered in Entra, so
+    // without redirectStartPage the post-login bounce lands on "/" — which the
+    // router's catch-all then sends to /charter-champions, silently losing the
+    // admin page the user was actually trying to sign in from.
+    void instance.loginRedirect({ ...loginRequest, redirectStartPage: window.location.href })
   }, [devAuthEnabled, instance])
 
   const getAccessToken = useCallback(async () => {
     if (devAuthEnabled) return DEV_ACCESS_TOKEN
 
     if (!account) {
-      await instance.loginRedirect(loginRequest)
+      await instance.loginRedirect({ ...loginRequest, redirectStartPage: window.location.href })
       throw new Error('Redirecting to sign in')
     }
 
@@ -28,7 +32,11 @@ export function useAuth() {
       return result.accessToken
     } catch (error) {
       if (error instanceof InteractionRequiredAuthError) {
-        await instance.acquireTokenRedirect({ ...loginRequest, account })
+        await instance.acquireTokenRedirect({
+          ...loginRequest,
+          account,
+          redirectStartPage: window.location.href,
+        })
         throw new Error('Redirecting for token consent')
       }
       throw error
