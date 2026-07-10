@@ -81,7 +81,10 @@ bootstrap_env_if_missing() {
   fi
   if [[ -n "${ENTRA_CLIENT_ID:-}" ]]; then
     upsert_env_value ENTRA_CLIENT_ID "$ENTRA_CLIENT_ID"
-    upsert_env_value ENTRA_AUDIENCE "api://${ENTRA_CLIENT_ID}"
+    # v2.0 access tokens for this single-tenant app carry the bare client ID as
+    # "aud", not the "api://<client-id>" App ID URI used only in the requested
+    # scope string — confirmed against a real decoded token on 2026-07-10.
+    upsert_env_value ENTRA_AUDIENCE "${ENTRA_CLIENT_ID}"
   fi
 
   echo "Bootstrap complete. Review $ENV_FILE once by hand before the first restart if anything above was skipped."
@@ -128,7 +131,10 @@ sync_runtime_env_from_ci() {
   fi
   if [[ -n "${ENTRA_CLIENT_ID:-}" ]]; then
     upsert_env_value ENTRA_CLIENT_ID "$ENTRA_CLIENT_ID"
-    upsert_env_value ENTRA_AUDIENCE "api://${ENTRA_CLIENT_ID}"
+    # v2.0 access tokens for this single-tenant app carry the bare client ID as
+    # "aud", not the "api://<client-id>" App ID URI used only in the requested
+    # scope string — confirmed against a real decoded token on 2026-07-10.
+    upsert_env_value ENTRA_AUDIENCE "${ENTRA_CLIENT_ID}"
   fi
 }
 
