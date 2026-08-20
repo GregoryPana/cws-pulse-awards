@@ -45,9 +45,13 @@
     padding: 10mm 20mm 8mm;
   }
   .logo {
+    position: absolute; top: 18mm; left: 18mm;
     width: 40px; height: 40px; border-radius: 50%;
     border: 1px solid #10B981; padding: 3px; background: #FFFFFF;
-    margin-bottom: 6px;
+  }
+  .trophy {
+    width: 56px; height: auto;
+    margin-bottom: 8px;
   }
   .brand-name {
     font-family: 'Outfit', Arial, sans-serif;
@@ -83,25 +87,10 @@
     color: #047857;
     background: rgba(16,185,129,0.10);
   }
-  .presented-to {
-    margin-top: 22px;
-    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-    font-style: italic; font-size: 13px; color: #6B8099;
-  }
-  .winner-name {
-    margin-top: 6px;
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-weight: 700; font-size: 46px; line-height: 1.05;
-    color: #0A2240;
-  }
-  .winner-role {
-    margin-top: 4px;
-    font-size: 12.5px; color: #6B8099;
-  }
   .divider {
     width: 70px; height: 2px;
     background: linear-gradient(90deg, transparent, #0070C0, transparent);
-    margin: 16px 0;
+    margin: 26px 0;
   }
   .body-text {
     max-width: 165mm;
@@ -156,18 +145,16 @@
     <div class="corner bl"></div>
     <div class="corner br"></div>
 
+    <img class="logo" src="{{ logo_url }}" alt="CWS logo">
+
     <div class="content">
-      <img class="logo" src="{{ logo_url }}" alt="CWS logo">
+      <img class="trophy" src="{{ trophy_image_url }}" alt="Trophy">
       <div class="brand-name">Cable &amp; Wireless Seychelles</div>
       <div class="brand-sub">CWS Pulse Awards</div>
 
       <div class="eyebrow">Manager-to-Staff Recognition</div>
       <h1 class="title">Instant <em>Impact</em></h1>
       <span class="badge">Certificate of Recognition</span>
-
-      <p class="presented-to">This certificate is proudly presented to</p>
-      <h2 class="winner-name">{{ winner_first_name }} {{ winner_last_name }}</h2>
-      <p class="winner-role">{{ winner_job_title }} &mdash; {{ winner_department }}</p>
 
       <div class="divider"></div>
 

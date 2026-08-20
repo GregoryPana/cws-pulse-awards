@@ -368,9 +368,10 @@ async def download_award_certificate(
 
     settings = await _public_settings(db)
     context = _award_email_context(winner, settings)
-    # The PDF sidecar runs in its own container, so it needs its own reachable asset URL
-    # for the logo — see pdf_asset_base_url in core/config.py.
+    # The PDF sidecar runs in its own container, so it needs its own reachable asset URLs
+    # for the logo and trophy — see pdf_asset_base_url in core/config.py.
     context["logo_url"] = get_settings().pdf_logo_url
+    context["trophy_image_url"] = get_settings().pdf_trophy_image_url
     html = render_certificate(_certificate_template_name(winner.award_type), context)
 
     filename = f"{winner.first_name}-{winner.last_name}-certificate.pdf".replace(" ", "-")

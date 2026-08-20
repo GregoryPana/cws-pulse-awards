@@ -128,6 +128,13 @@ class Settings(BaseSettings):
 
     @computed_field
     @property
+    def pdf_trophy_image_url(self) -> str:
+        """Return the trophy artwork URL reachable from inside the PDF sidecar container."""
+
+        return f"{self.pdf_asset_base_url.rstrip('/')}/brand/trophy.png"
+
+    @computed_field
+    @property
     def resolved_database_url(self) -> str:
         """Return the configured async database URL or build one from component settings."""
 
