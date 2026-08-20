@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS config_subcategories (
     updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-COMMENT ON TABLE  config_subcategories IS 'Sub-categories per award type — 3 for Charter Champion, 3 for Instant Impact';
+COMMENT ON TABLE  config_subcategories IS 'Sub-categories per award type — 5 for Charter Champion, 5 for Instant Impact';
 COMMENT ON COLUMN config_subcategories.award_type IS 'Values: CHARTER_CHAMPION, INSTANT_IMPACT';
 
 -- ── CONFIG: SETTINGS (KEY-VALUE) ──────────────────────────────────────────────
@@ -202,15 +202,20 @@ INSERT INTO config_values (name, sort_order, active) VALUES
 ON CONFLICT DO NOTHING;
 
 -- ── SEED DATA: SUB-CATEGORIES ─────────────────────────────────────────────────
--- 6 sub-categories (3 per award type) — final, confirmed by CCCO
+-- 10 sub-categories (5 per award type) — original 6 final/confirmed by CCCO;
+-- Outstanding Team Player and Leadership in Action added 2026-08-20 to both award types.
 
 INSERT INTO config_subcategories (award_type, name, sort_order, active) VALUES
     ('CHARTER_CHAMPION', 'Collaboration Catalyst',      1, true),
     ('CHARTER_CHAMPION', 'Empathy Anchor',              2, true),
     ('CHARTER_CHAMPION', 'Knowledge Sharer',            3, true),
+    ('CHARTER_CHAMPION', 'Outstanding Team Player',     4, true),
+    ('CHARTER_CHAMPION', 'Leadership in Action',        5, true),
     ('INSTANT_IMPACT',   'Service Recovery Excellence', 1, true),
     ('INSTANT_IMPACT',   'Innovative Efficiency',       2, true),
-    ('INSTANT_IMPACT',   'Integrity Under Pressure',    3, true)
+    ('INSTANT_IMPACT',   'Integrity Under Pressure',    3, true),
+    ('INSTANT_IMPACT',   'Outstanding Team Player',     4, true),
+    ('INSTANT_IMPACT',   'Leadership in Action',        5, true)
 ON CONFLICT DO NOTHING;
 
 -- ── SEED DATA: CONFIG SETTINGS ────────────────────────────────────────────────

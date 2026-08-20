@@ -49,7 +49,7 @@ def test_alembic_upgrade_head_and_seed_counts() -> None:
 
     assert pillars == 9  # includes the "Ethics" pillar added by migration 003
     assert values == 5
-    assert subcategories == 6
+    assert subcategories == 10  # includes Outstanding Team Player / Leadership in Action added by migration 004
     assert settings_count >= 1
     assert email_recipient_count == 3, (
         f"Expected 3 email recipients, got {email_recipient_count}"
