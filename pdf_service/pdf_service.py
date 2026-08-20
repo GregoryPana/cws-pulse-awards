@@ -21,7 +21,12 @@ async def render_pdf(html: str, landscape: bool = False) -> bytes:
     """Render HTML to PDF bytes with headless Chromium."""
 
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(args=["--no-sandbox"])
+        # --ignore-certificate-errors: PDF_ASSET_BASE_URL in staging/production points
+        # at the shared VM's self-signed cert (owned by another app, CN-only, no SAN —
+        # see scripts/linux/verify_release.sh, which skips validation the same way with
+        # curl -k). Chromium won't fall back to CN matching, so trusting the cert alone
+        # doesn't fix image loading; only skipping validation does.
+        browser = await playwright.chromium.launch(args=["--no-sandbox", "--ignore-certificate-errors"])
         try:
             page = await browser.new_page()
             await page.set_content(html, wait_until="networkidle")
