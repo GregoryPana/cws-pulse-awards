@@ -168,7 +168,7 @@ def upgrade() -> None:
             ('ccco_title', 'Chief Customer Centric Officer', 'CCCO title — appears on Golden Ticket certificate'),
             ('chief_pc_name', '', 'Chief P&C Officer name — optional third signatory on Golden Ticket certificate. Leave blank to omit.'),
             ('chief_pc_title', 'Chief People & Culture Officer', 'Chief P&C title — used if chief_pc_name is set'),
-            ('hall_of_fame_url', 'https://pulse.cwsey.com', 'URL included in email footers linking to the Hall of Fame'),
+            ('hall_of_fame_url', 'https://cwscx-tst01.cwsey.com/pulse-awards', 'URL included in email footers linking to the Hall of Fame'),
             ('hall_of_fame_intro', '', 'Hero section introductory text on both Hall of Fame pages. Edit to set the programme welcome message.'),
             ('programme_launch_month', 'Jun 2026', 'Controls the archive floor — months before this are not shown in the month filter'),
             ('email_from_address', 'noreply@cwseychelles.com', 'From address for all platform emails sent via SMTP relay'),
