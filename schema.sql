@@ -211,7 +211,7 @@ INSERT INTO config_subcategories (award_type, name, sort_order, active) VALUES
     ('CHARTER_CHAMPION', 'Knowledge Sharer',            3, true),
     ('CHARTER_CHAMPION', 'Outstanding Team Player',     4, true),
     ('CHARTER_CHAMPION', 'Leadership in Action',        5, true),
-    ('INSTANT_IMPACT',   'Service Recovery Excellence', 1, true),
+    ('INSTANT_IMPACT',   'Service Delivery',            1, true),
     ('INSTANT_IMPACT',   'Innovative Efficiency',       2, true),
     ('INSTANT_IMPACT',   'Integrity Under Pressure',    3, true),
     ('INSTANT_IMPACT',   'Outstanding Team Player',     4, true),
