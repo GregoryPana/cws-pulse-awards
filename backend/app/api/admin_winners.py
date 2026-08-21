@@ -84,6 +84,15 @@ async def _active_recipient_emails(db: AsyncSession) -> list[str]:
     return [row.email for row in result.scalars().all()]
 
 
+def _hall_of_fame_url_for(award_type: str, base_url: str | None) -> str:
+    """Return the Hall of Fame link for a winner's own award wall, not the generic root."""
+
+    if not base_url:
+        return ""
+    path = "/instant-impact" if award_type == "INSTANT_IMPACT" else "/charter-champions"
+    return base_url.rstrip("/") + path
+
+
 def _award_email_context(winner: Winner, settings: dict[str, str | None]) -> dict[str, Any]:
     """Build the template context for standard award notification emails."""
 
@@ -101,7 +110,7 @@ def _award_email_context(winner: Winner, settings: dict[str, str | None]) -> dic
         "story": winner.story,
         "nominated_by": winner.nominated_by or "A colleague",
         "award_month": winner.award_month,
-        "hall_of_fame_url": settings.get("hall_of_fame_url", ""),
+        "hall_of_fame_url": _hall_of_fame_url_for(winner.award_type, settings.get("hall_of_fame_url")),
         "photo_url": winner.photo_url,
         "logo_url": get_settings().logo_url,
         "trophy_image_url": get_settings().trophy_image_url,
@@ -176,7 +185,7 @@ async def preview_award_email_from_payload(
         "story": payload.story,
         "nominated_by": payload.nominated_by or "A colleague",
         "award_month": payload.award_month,
-        "hall_of_fame_url": settings.get("hall_of_fame_url", ""),
+        "hall_of_fame_url": _hall_of_fame_url_for(payload.award_type, settings.get("hall_of_fame_url")),
         "photo_url": payload.photo_url,
         "logo_url": get_settings().logo_url,
         "trophy_image_url": get_settings().trophy_image_url,

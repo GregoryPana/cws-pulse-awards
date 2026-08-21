@@ -81,6 +81,15 @@ async def _active_recipient_emails(db: AsyncSession) -> list[str]:
     return [row.email for row in result.scalars().all()]
 
 
+def _hall_of_fame_url_for(award_type: str, base_url: str | None) -> str:
+    """Return the Hall of Fame link for a winner's own award wall, not the generic root."""
+
+    if not base_url:
+        return ""
+    path = "/instant-impact" if award_type == "INSTANT_IMPACT" else "/charter-champions"
+    return base_url.rstrip("/") + path
+
+
 def _golden_ticket_context(winner: Winner, config_rows: dict[str, str | None]) -> dict[str, Any]:
     """Build the template context for Golden Ticket emails."""
 
@@ -105,7 +114,7 @@ def _golden_ticket_context(winner: Winner, config_rows: dict[str, str | None]) -
         "story": winner.story,
         "nominated_by": nominated_by,
         "award_month": winner.award_month,
-        "hall_of_fame_url": config_rows.get("hall_of_fame_url", ""),
+        "hall_of_fame_url": _hall_of_fame_url_for(winner.award_type, config_rows.get("hall_of_fame_url")),
         "photo_url": winner.photo_url,
         "ceo_message": winner.golden_ticket_ceo_message or "",
         "ceo_name": config_rows.get("ceo_name", ""),
