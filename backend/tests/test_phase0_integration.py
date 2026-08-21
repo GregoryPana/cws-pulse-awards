@@ -54,7 +54,9 @@ def test_alembic_upgrade_head_and_seed_counts() -> None:
     assert email_recipient_count == 3, (
         f"Expected 3 email recipients, got {email_recipient_count}"
     )
-    assert winner_count == 12, f"Expected 12 winners, got {winner_count}"
+    assert winner_count == 0, (
+        f"Expected 0 winners after migration 005 clears seeded test winners, got {winner_count}"
+    )
 
 
 def test_pdf_sidecar_renders_pdf_bytes() -> None:
