@@ -56,6 +56,29 @@ body {
     animation: traceSpin var(--trace-duration, 8s) linear infinite;
   }
 
+  /* Standard cards: the beam only exists (and only animates) while the card is hovered or
+     keyboard-focused. A month with a dozen cards therefore costs zero idle compositor work,
+     instead of a dozen endless conic-gradient rotations. The single Golden Ticket card keeps
+     its always-on beam. */
+  .border-trace:not(.border-trace--golden) {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .border-trace:not(.border-trace--golden)::before {
+    animation-play-state: paused;
+  }
+
+  .group:hover > .border-trace:not(.border-trace--golden),
+  .group:focus-within > .border-trace:not(.border-trace--golden) {
+    opacity: 1;
+  }
+
+  .group:hover > .border-trace:not(.border-trace--golden)::before,
+  .group:focus-within > .border-trace:not(.border-trace--golden)::before {
+    animation-play-state: running;
+  }
+
   /* Golden Ticket: two brighter beams chasing each other on a thicker ring. */
   .border-trace--golden {
     padding: 2px;

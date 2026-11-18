@@ -18,14 +18,38 @@ export default function PillarTag({ pillar, variant }: Props) {
   return (
     <span
       className={`
-        inline-flex items-center gap-1.5
-        font-label text-[11px] font-semibold tracking-wide
-        px-2.5 py-1.5 rounded-tag border
+        inline-flex max-w-full items-start gap-1.5
+        font-label text-[10.5px] font-semibold leading-snug tracking-wide
+        px-2 py-1 rounded-tag border
         ${styles[variant]}
       `}
     >
-      <Milestone className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.2} />
+      <Milestone className="mt-px h-3 w-3 shrink-0" aria-hidden="true" strokeWidth={2.2} />
       {pillar}
     </span>
+  )
+}
+
+const MAX_VISIBLE = 3
+
+/** Compact pillar list: shows up to three tags and collapses any extras into a "+N" chip. */
+export function PillarTagList({ pillars, variant }: { pillars: string[]; variant: Props['variant'] }) {
+  const visible = pillars.slice(0, MAX_VISIBLE)
+  const hidden = pillars.slice(MAX_VISIBLE)
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {visible.map((pillar) => (
+        <PillarTag key={pillar} pillar={pillar} variant={variant} />
+      ))}
+      {hidden.length > 0 && (
+        <span
+          title={hidden.join(', ')}
+          aria-label={`Also: ${hidden.join(', ')}`}
+          className={`inline-flex items-center rounded-tag border px-2 py-1 font-label text-[10.5px] font-semibold ${styles[variant]}`}
+        >
+          +{hidden.length}
+        </span>
+      )}
+    </div>
   )
 }

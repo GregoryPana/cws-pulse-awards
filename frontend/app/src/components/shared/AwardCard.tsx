@@ -1,10 +1,10 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { SparklesIcon, TicketStarIcon } from '@hugeicons/core-free-icons'
 import type { WinnerPublic } from '../../api/winners'
 import Avatar from './Avatar'
 import CategoryBadge from './CategoryBadge'
-import PillarTag from './PillarTag'
+import { PillarTagList } from './PillarTag'
 
 interface Props {
   winner: WinnerPublic
@@ -38,6 +38,11 @@ const cardHoverStrip: Record<string, string> = {
 const cardBg: Record<string, string> = {
   blue: 'bg-gradient-to-br from-[#0B1C30]/95 to-[#061426]/95 border border-white/[0.07] shadow-xl shadow-black/20',
   gold: 'bg-gradient-to-br from-[#0B1C30]/95 to-[#1A0E0C]/95 border border-impact/[0.12] shadow-xl shadow-black/20',
+}
+
+const subcategoryColor: Record<string, string> = {
+  blue: 'text-sky/80',
+  gold: 'text-impact-soft/85',
 }
 
 const storyQuoteColor: Record<string, string> = {
@@ -90,6 +95,75 @@ function FloatingSparkles() {
   )
 }
 
+const CLAMP_LINES = 6
+
+/**
+ * Story text limited to a fixed number of lines so cards stay a consistent height. Collapsing is
+ * done with an animated max-height (a CSS line-clamp can't be transitioned) and a soft fade at the
+ * cut-off. "Read more" only appears when the text actually overflows.
+ */
+function ClampedStory({ story, quoteClass }: { story: string; quoteClass: string }) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  const [expanded, setExpanded] = useState(false)
+  const [full, setFull] = useState(0)
+  const [limit, setLimit] = useState(0)
+  const bodyId = useId()
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => {
+      const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 22
+      setLimit(Math.round(lineHeight * CLAMP_LINES))
+      setFull(el.scrollHeight)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [story])
+
+  const overflows = limit > 0 && full > limit + 2
+  const collapsed = overflows && !expanded
+
+  return (
+    <div className="relative mt-3.5 flex-1 border-t border-white/5 pt-3.5">
+      <span
+        className={`absolute -left-1 top-1 font-display text-5xl leading-none ${quoteClass} opacity-50`}
+        aria-hidden="true"
+      >
+        &ldquo;
+      </span>
+      <div
+        id={bodyId}
+        className="overflow-hidden transition-[max-height] duration-300 ease-out"
+        style={{
+          /* Short stories still reserve three lines so cards don't collapse to very different heights. */
+          minHeight: limit ? Math.round(limit / 2) : undefined,
+          maxHeight: overflows ? (expanded ? full : limit) : undefined,
+          WebkitMaskImage: collapsed ? 'linear-gradient(#000 70%, transparent)' : undefined,
+          maskImage: collapsed ? 'linear-gradient(#000 70%, transparent)' : undefined,
+        }}
+      >
+        <p ref={ref} className="pl-5 text-sm font-light italic leading-relaxed text-white/72">
+          {story}
+        </p>
+      </div>
+      {overflows && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          aria-controls={bodyId}
+          className="-mb-2 ml-5 mt-0.5 inline-flex min-h-[44px] items-center px-1 font-label text-xs font-semibold uppercase tracking-wider text-white/60 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-white/60 sm:min-h-[36px]"
+        >
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
   const isFeatured = winner.golden_ticket
   const cardVariant = variant === 'blue' ? 'peer' : 'impact'
@@ -99,7 +173,7 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
     return (
       <div
         data-card
-        className="group col-span-full rounded-card bg-[linear-gradient(120deg,#A87E1F,#F7D88C,#D6A933,#F7D88C,#A87E1F)] bg-[length:240%_240%] p-[1.5px] sm:animate-foilShift transition-transform duration-300 ease-out hover:-translate-y-1.5 hover:scale-[1.005]"
+        className="group w-full rounded-card bg-[linear-gradient(120deg,#A87E1F,#F7D88C,#D6A933,#F7D88C,#A87E1F)] bg-[length:240%_240%] p-[1.5px] sm:animate-foilShift transition-transform duration-300 ease-out hover:-translate-y-1.5 hover:scale-[1.005]"
       >
         {/*
          * `glowGold`/`foilShift` animate box-shadow/background-position, which force a
@@ -121,7 +195,7 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,166,35,0.16),transparent_42%)]"
           />
 
-          <div className="relative p-8 md:border-r md:border-gold/15">
+          <div className="relative p-5 sm:p-8 md:border-r md:border-gold/15">
             <div className="mb-4 inline-flex items-center gap-2 rounded-badge border border-gold/40 bg-gold/[0.12] px-3.5 py-1.5 font-label text-[10px] font-bold uppercase tracking-[2px] text-gold-soft">
               <HugeiconsIcon icon={TicketStarIcon} size={14} strokeWidth={2} aria-hidden="true" />
               Golden Ticket Winner
@@ -148,11 +222,7 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {winner.charter_pillars.map((pillar) => (
-                <PillarTag key={pillar} pillar={pillar} variant="golden" />
-              ))}
-            </div>
+            <PillarTagList pillars={winner.charter_pillars} variant="golden" />
             <p className="mt-4 border-t border-gold/15 pt-3 text-[11.5px] text-white/35">
               Nominated by{' '}
               <strong className="font-medium text-gold-soft/80">
@@ -162,7 +232,7 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
             </p>
           </div>
 
-          <div className="relative flex flex-col justify-center p-8">
+          <div className="relative flex flex-col justify-center p-5 sm:p-8">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 bg-gradient-to-br from-gold/[0.14] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -170,7 +240,7 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
             <p className="relative mb-3 inline-flex items-center gap-2 font-label text-[10px] font-bold uppercase tracking-widest text-gold">
               <HugeiconsIcon icon={SparklesIcon} size={16} strokeWidth={2} aria-hidden="true" /> Why This Matters
             </p>
-            <blockquote className="relative mb-4 font-display text-[22px] font-bold leading-snug text-white">
+            <blockquote className="relative mb-4 font-display text-[18px] font-bold leading-snug text-white sm:text-[22px]">
               <span
                 className="absolute -left-2 -top-2.5 text-6xl leading-none text-gold/40"
                 aria-hidden="true"
@@ -189,7 +259,7 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
     <article
       data-card
       className={`
-        ${cardBg[variant]} rounded-card overflow-hidden relative
+        ${cardBg[variant]} rounded-card overflow-hidden relative flex min-w-0 flex-1 flex-col
         transition-all duration-300 ease-out
         ${cardHoverGlow[variant]} hover:-translate-y-1.5 hover:scale-[1.015]
         cursor-default
@@ -212,10 +282,16 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
       />
       <div className={`h-1 ${cardBarGradients[cardVariant]}`} />
 
-      <div className="relative p-6">
-        <CategoryBadge label={awardTypeLabel} variant={cardVariant} />
+      <div className="relative flex flex-1 flex-col p-5 sm:p-6">
+        {/* The wall's own title already names the award, so the card shows the subcategory
+            instead of repeating the award type. */}
+        {winner.subcategory && (
+          <p className={`mb-3 font-label text-[10.5px] font-bold uppercase tracking-[1.5px] ${subcategoryColor[variant]}`}>
+            {winner.subcategory}
+          </p>
+        )}
 
-        <div className="mb-4 mt-4 flex items-center gap-3.5">
+        <div className="mb-4 flex items-center gap-3.5">
           <Avatar
             firstName={winner.first_name}
             lastName={winner.last_name}
@@ -233,25 +309,11 @@ export default function AwardCard({ winner, variant, awardTypeLabel }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {winner.charter_pillars.map((pillar) => (
-            <PillarTag key={pillar} pillar={pillar} variant={variant} />
-          ))}
-        </div>
+        <PillarTagList pillars={winner.charter_pillars} variant={variant} />
 
-        <div className="relative mt-3.5 border-t border-white/5 pt-3.5">
-          <span
-            className={`absolute -left-1 top-1 font-display text-5xl leading-none ${storyQuoteColor[variant]} opacity-50`}
-            aria-hidden="true"
-          >
-            &ldquo;
-          </span>
-          <p className="pl-5 text-sm font-light italic leading-relaxed text-white/72">
-            {winner.story}
-          </p>
-        </div>
+        <ClampedStory story={winner.story} quoteClass={storyQuoteColor[variant]} />
 
-        <p className="mt-3.5 border-t border-white/5 pt-3 text-[11.5px] text-white/35">
+        <p className="mt-auto border-t border-white/5 pt-3 text-[11.5px] text-white/35">
           Nominated by{' '}
           <strong className="font-medium text-white/55">
             {winner.nominated_by || 'a colleague'}

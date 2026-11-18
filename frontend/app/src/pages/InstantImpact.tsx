@@ -3,12 +3,13 @@ import { TriangleAlert } from 'lucide-react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ChampionIcon } from '@hugeicons/core-free-icons'
 import { useStaggerReveal } from '../lib/animations'
-import { MONTHS_SHORT, currentMonthIndex, currentYear, isPreLaunch } from '../lib/dates'
+import { LAUNCH_LABEL, MONTHS_SHORT, currentMonthIndex, currentYear, isPreLaunch } from '../lib/dates'
 import AnimatedBackground from '../components/shared/AnimatedBackground'
 import Header from '../components/layout/Header'
 import PeriodNav from '../components/shared/PeriodNav'
 import HallFilters from '../components/shared/HallFilters'
 import AwardCard from '../components/shared/AwardCard'
+import WinnerGrid from '../components/shared/WinnerGrid'
 import EmptyState from '../components/shared/EmptyState'
 import PreLaunchNotice from '../components/shared/PreLaunchNotice'
 import { useWinners } from '../hooks/useWinners'
@@ -61,17 +62,17 @@ export default function InstantImpact() {
       <div className="relative z-10">
         <Header variant="gold" liveLabel="Instant Impact Wall" />
 
-        <section className="text-center px-6 pt-[52px] pb-10">
+        <section className="px-6 pb-6 pt-8 text-center sm:pt-10">
           <p className="mx-auto mb-4 inline-flex items-center gap-2 rounded-badge border border-impact/30 bg-impact/10 px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[3px] text-impact-soft animate-fadeUp opacity-0 [animation-delay:0.1s]">
             <HugeiconsIcon icon={ChampionIcon} size={16} strokeWidth={2} aria-hidden="true" /> Manager-to-Staff Recognition
           </p>
-          <h1 className="font-display font-black text-[clamp(34px,5.5vw,64px)] leading-[1.05] mb-4 animate-fadeUp opacity-0 [animation-delay:0.25s]">
-            Instant<br />
+          <h1 className="font-display font-black text-[clamp(32px,4.5vw,54px)] leading-[1.05] mb-3 animate-fadeUp opacity-0 [animation-delay:0.25s]">
+            Instant<br className="sm:hidden" />{' '}
             <span className="bg-gradient-to-r from-impact to-impact-soft bg-clip-text text-transparent">
               Impact
             </span>
           </h1>
-          <p className="font-body font-light text-base text-white/50 max-w-[520px] mx-auto mb-8 leading-relaxed animate-fadeUp opacity-0 [animation-delay:0.4s]">
+          <p className="font-body font-light text-base text-white/50 max-w-[520px] mx-auto mb-5 leading-relaxed animate-fadeUp opacity-0 [animation-delay:0.4s]">
             Recognising the staff members whose actions moved the needle &mdash;
             meeting the highest bar of our Customer Centric Charter.
           </p>
@@ -79,6 +80,12 @@ export default function InstantImpact() {
             <span className="font-body text-sm text-white/60 tracking-wide">
               Showing{' '}
               <span className="font-bold text-impact-soft">{heroPeriod}</span>
+              {state === 'success' && preLaunch && (
+                <span className="text-white/50"> · before the programme launched</span>
+              )}
+              {state === 'success' && !preLaunch && (
+                <span className="text-white/80"> · {sorted.length} {sorted.length === 1 ? 'recipient' : 'recipients'}</span>
+              )}
               {selectedCategory !== 'All' && (
                 <span className="hidden sm:inline"> · {selectedCategory}</span>
               )}
@@ -86,7 +93,7 @@ export default function InstantImpact() {
           </div>
         </section>
 
-        <div className="w-[60px] h-[2px] mx-auto mb-10 bg-gradient-to-r from-transparent via-impact to-transparent animate-fadeUp opacity-0 [animation-delay:0.65s]" />
+        <div className="w-[60px] h-[2px] mx-auto mb-6 bg-gradient-to-r from-transparent via-impact to-transparent animate-fadeUp opacity-0 [animation-delay:0.65s]" />
 
         <PeriodNav
           activeMonth={activeMonth}
@@ -94,16 +101,18 @@ export default function InstantImpact() {
           onChange={setActiveMonth}
           onYearChange={handleYearChange}
           variant="gold"
+          filter={
+            <HallFilters
+            variant="gold"
+            selectedCategory={selectedCategory}
+            categories={categories}
+            onCategoryChange={setSelectedCategory}
+            />
+          }
         />
 
-        <HallFilters
-          variant="gold"
-          selectedCategory={selectedCategory}
-          categories={categories}
-          onCategoryChange={setSelectedCategory}
-        />
 
-        <section className="max-w-[1100px] mx-auto px-8 pb-20">
+        <section className="mx-auto max-w-[1480px] px-4 pb-20 sm:px-8">
           {state === 'loading' && (
             <div className="flex items-center justify-center py-20">
               <div className="w-8 h-8 border-2 border-impact border-t-transparent rounded-full animate-spin" />
@@ -122,7 +131,7 @@ export default function InstantImpact() {
           )}
 
           {state === 'success' && sorted.length === 0 && preLaunch && (
-            <PreLaunchNotice period={activeMonth} />
+            <PreLaunchNotice period={activeMonth} onViewLaunch={() => setActiveMonth(LAUNCH_LABEL)} />
           )}
 
           {state === 'success' && sorted.length === 0 && !preLaunch && (
@@ -130,16 +139,18 @@ export default function InstantImpact() {
           )}
 
           {state === 'success' && sorted.length > 0 && (
-            <div ref={gridRef} className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-              {sorted.map((w) => (
+            <WinnerGrid
+              ref={gridRef}
+              winners={sorted}
+              renderCard={(w) => (
                 <AwardCard
                   key={w.id}
                   winner={w}
                   variant="gold"
                   awardTypeLabel="Instant Impact"
                 />
-              ))}
-            </div>
+              )}
+            />
           )}
         </section>
       </div>

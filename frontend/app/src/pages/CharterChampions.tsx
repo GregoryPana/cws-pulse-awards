@@ -3,12 +3,13 @@ import { TriangleAlert } from 'lucide-react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Agreement01Icon } from '@hugeicons/core-free-icons'
 import { useStaggerReveal } from '../lib/animations'
-import { MONTHS_SHORT, currentMonthIndex, currentYear, isPreLaunch } from '../lib/dates'
+import { LAUNCH_LABEL, MONTHS_SHORT, currentMonthIndex, currentYear, isPreLaunch } from '../lib/dates'
 import AnimatedBackground from '../components/shared/AnimatedBackground'
 import Header from '../components/layout/Header'
 import PeriodNav from '../components/shared/PeriodNav'
 import HallFilters from '../components/shared/HallFilters'
 import AwardCard from '../components/shared/AwardCard'
+import WinnerGrid from '../components/shared/WinnerGrid'
 import EmptyState from '../components/shared/EmptyState'
 import PreLaunchNotice from '../components/shared/PreLaunchNotice'
 import { useWinners } from '../hooks/useWinners'
@@ -61,15 +62,15 @@ export default function CharterChampions() {
       <div className="relative z-10">
         <Header variant="blue" liveLabel="Charter Champions Wall" />
 
-        <section className="text-center px-6 pt-[52px] pb-10">
+        <section className="px-6 pb-6 pt-8 text-center sm:pt-10">
           <p className="mx-auto mb-4 inline-flex items-center gap-2 rounded-badge border border-gold/25 bg-gold/10 px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[3px] text-gold animate-fadeUp opacity-0 [animation-delay:0.1s]">
             <HugeiconsIcon icon={Agreement01Icon} size={16} strokeWidth={2} aria-hidden="true" /> Peer-to-Peer Recognition
           </p>
-          <h1 className="font-display font-black text-[clamp(36px,6vw,68px)] leading-[1.05] tracking-tight mb-4 animate-fadeUp opacity-0 [animation-delay:0.25s]">
-            Charter<br />
+          <h1 className="font-display font-black text-[clamp(32px,4.5vw,54px)] leading-[1.05] tracking-tight mb-3 animate-fadeUp opacity-0 [animation-delay:0.25s]">
+            Charter<br className="sm:hidden" />{' '}
             <span className="text-gold">Champions</span>
           </h1>
-          <p className="font-body font-light text-base text-white/55 max-w-[520px] mx-auto mb-8 leading-relaxed animate-fadeUp opacity-0 [animation-delay:0.4s]">
+          <p className="font-body font-light text-base text-white/55 max-w-[520px] mx-auto mb-5 leading-relaxed animate-fadeUp opacity-0 [animation-delay:0.4s]">
             Celebrating the colleagues who go the extra mile &mdash; living our
             Customer Centric Charter every single day.
           </p>
@@ -77,6 +78,12 @@ export default function CharterChampions() {
             <span className="font-body text-sm text-white/70 tracking-wide">
               Showing{' '}
               <span className="font-bold text-gold">{heroPeriod}</span>
+              {state === 'success' && preLaunch && (
+                <span className="text-white/50"> · before the programme launched</span>
+              )}
+              {state === 'success' && !preLaunch && (
+                <span className="text-white/80"> · {sorted.length} {sorted.length === 1 ? 'recipient' : 'recipients'}</span>
+              )}
               {selectedCategory !== 'All' && (
                 <span className="hidden sm:inline"> · {selectedCategory}</span>
               )}
@@ -84,7 +91,7 @@ export default function CharterChampions() {
           </div>
         </section>
 
-        <div className="w-[60px] h-[2px] mx-auto mb-10 bg-gradient-to-r from-transparent via-gold to-transparent animate-fadeUp opacity-0 [animation-delay:0.65s]" />
+        <div className="w-[60px] h-[2px] mx-auto mb-6 bg-gradient-to-r from-transparent via-gold to-transparent animate-fadeUp opacity-0 [animation-delay:0.65s]" />
 
         <PeriodNav
           activeMonth={activeMonth}
@@ -92,16 +99,18 @@ export default function CharterChampions() {
           onChange={setActiveMonth}
           onYearChange={handleYearChange}
           variant="blue"
+          filter={
+            <HallFilters
+            variant="blue"
+            selectedCategory={selectedCategory}
+            categories={categories}
+            onCategoryChange={setSelectedCategory}
+            />
+          }
         />
 
-        <HallFilters
-          variant="blue"
-          selectedCategory={selectedCategory}
-          categories={categories}
-          onCategoryChange={setSelectedCategory}
-        />
 
-        <section className="max-w-[1100px] mx-auto px-8 pb-20">
+        <section className="mx-auto max-w-[1480px] px-4 pb-20 sm:px-8">
           {state === 'loading' && (
             <div className="flex items-center justify-center py-20">
               <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -120,7 +129,7 @@ export default function CharterChampions() {
           )}
 
           {state === 'success' && sorted.length === 0 && preLaunch && (
-            <PreLaunchNotice period={activeMonth} />
+            <PreLaunchNotice period={activeMonth} onViewLaunch={() => setActiveMonth(LAUNCH_LABEL)} />
           )}
 
           {state === 'success' && sorted.length === 0 && !preLaunch && (
@@ -128,16 +137,18 @@ export default function CharterChampions() {
           )}
 
           {state === 'success' && sorted.length > 0 && (
-            <div ref={gridRef} className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
-              {sorted.map((w) => (
+            <WinnerGrid
+              ref={gridRef}
+              winners={sorted}
+              renderCard={(w) => (
                 <AwardCard
                   key={w.id}
                   winner={w}
                   variant="blue"
                   awardTypeLabel="Charter Champion"
                 />
-              ))}
-            </div>
+              )}
+            />
           )}
         </section>
       </div>
