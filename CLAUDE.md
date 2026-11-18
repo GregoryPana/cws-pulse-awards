@@ -57,3 +57,8 @@ Never include secrets, tokens, passwords, cookies, connection-string values, `.e
 ## Design/UI work
 
 Before substantial frontend/UI work, read `docs/AGENT_DESIGN_SKILLS.md` and `DESIGN_SYSTEM.md` if relevant. Hermes decides which design-skill bundle applies; do not load every design skill by default. For implemented UI, run available build/lint/type checks and provide browser/responsive/console verification before claiming completion.
+
+
+## Project flow mapping
+
+Before substantial redesign, migration, architecture change, cross-cutting implementation, audit, handover, or deployment planning, read `docs/agent-skills/project-flow-mapping/SKILL.md`. Use it to map the applicable user, administrator, system, data, state, integration, failure/recovery, operational, delivery, and manual flows from repository evidence. Do not require a full remap for a small, bounded change when a current flow map already covers the affected area; update only the impacted slice. Start read-only and do not convert discovered gaps into implementation scope without owner approval.

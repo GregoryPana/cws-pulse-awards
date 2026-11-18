@@ -4,6 +4,22 @@
   "skills": {
     "paths": [".opencode/skills"]
   },
+  "permission": {
+    "external_directory": {
+      "/mnt/c/Users/gpanagary/central-agent-skills/**": "allow",
+      "/home/gpanagary/.hermes/skills/**": "allow"
+    },
+    "edit": {
+      "/mnt/c/Users/gpanagary/central-agent-skills/**": "deny",
+      "/home/gpanagary/.hermes/skills/**": "deny"
+    }
+  },
+  "command": {
+    "hermes-handoff": {
+      "description": "Flush the pending Hermes log into one consolidated Hermes Update Pack.",
+      "template": "Use the hermes-update-pack skill. Read all unflushed entries in .opencode/hermes-pending-updates.md plus current repo state and produce ONE consolidated Hermes Update Pack covering everything since the last flush, then move flushed entries under a '## Flushed <date>' heading. Use the canonical project name 'CWS Pulse Awards'. Do not include secrets. State for the latest commit whether it is pushed to origin."
+    }
+  },
   "mcp": {
     "codegraph": {
       "type": "local",

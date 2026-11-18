@@ -79,9 +79,9 @@ Do not:
 - Run tests for changed areas.
 - Update docs when architecture, operations, auth, deployment, or handover assumptions change.
 
-## Required end-of-task handoff
+## Required end-of-task handoff (cadence changed 2026-07-06)
 
-Before ending any meaningful OpenCode task, produce a Hermes Update Pack with:
+Do NOT produce a full Hermes Update Pack after every task — it is credit-expensive. Instead, after any meaningful task, append a compact entry (3-8 lines: timestamp, one-line summary, branch@commit + pushed yes/no, files, verification, impact flags) to `.opencode/hermes-pending-updates.md`, then ask Gregory in ONE line whether to generate the consolidated Hermes Update Pack now. Only when Gregory says yes (or runs /hermes-handoff), read all unflushed entries plus current repo state and produce ONE consolidated pack covering everything since the last flush (then move flushed entries under a `## Flushed <date>` heading). Skip the queue only for deployment, auth/schema, destructive or security events. Use the canonical project name "CWS Pulse Awards". The consolidated pack must include:
 
 - branch/status;
 - files changed;
@@ -96,3 +96,13 @@ Before ending any meaningful OpenCode task, produce a Hermes Update Pack with:
 - suggested Hermes vault updates.
 
 Do not include secrets.
+
+## Design skills and UI guidance
+
+Before substantial frontend/UI work, read `docs/AGENT_DESIGN_SKILLS.md` and the project `DESIGN.md` / `DESIGN_SYSTEM.md` if present. Hermes decides the specific design-skill bundle for each task; do not load every design skill by default. For implemented UI, run available build/lint/type checks and provide browser/responsive/console verification before claiming completion.
+
+
+
+## Project flow mapping
+
+Before substantial redesign, migration, architecture change, cross-cutting implementation, audit, handover, or deployment planning, read `docs/agent-skills/project-flow-mapping/SKILL.md`. Use it to map the applicable user, administrator, system, data, state, integration, failure/recovery, operational, delivery, and manual flows from repository evidence. Do not require a full remap for a small, bounded change when a current flow map already covers the affected area; update only the impacted slice. Start read-only and do not convert discovered gaps into implementation scope without owner approval.
